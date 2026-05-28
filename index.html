@@ -162,6 +162,61 @@
     </div>
 
     <!-- ==================================================
+         MODAL DE DETALLES DEL PRODUCTO (VER DETALLE)
+         ================================================== -->
+    <div class="modal-overlay" id="detailModalOverlay">
+        <div class="variant-modal" style="max-width: 800px; width: 95%;">
+            <div class="modal-header">
+                <div class="modal-title" id="detailModalTitle">Detalles del Producto</div>
+                <button class="btn-close-drawer" id="closeDetailModalBtn" title="Cerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="display: flex; gap: 24px; flex-wrap: wrap; padding: 20px 24px 24px 24px;">
+                <!-- Galería de imágenes (izquierda) -->
+                <div style="flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 12px;">
+                    <div id="detailMainImageContainer" style="width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); background: rgba(0, 0, 0, 0.2); position: relative;">
+                        <img id="detailMainImage" src="" alt="Producto" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);">
+                    </div>
+                    <div id="detailThumbnails" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;">
+                        <!-- Miniaturas inyectadas dinámicamente -->
+                    </div>
+                </div>
+                
+                <!-- Información y Variantes (derecha) -->
+                <div style="flex: 1.2; min-width: 280px; display: flex; flex-direction: column; justify-content: flex-start; gap: 16px;">
+                    <div>
+                        <span id="detailCategory" style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;">CATEGORIA</span>
+                        <h2 id="detailProductName" style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-top: 4px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Nombre del Producto</h2>
+                        <div id="detailProductPrice" style="font-size: 22px; font-weight: 800; color: var(--text-primary); font-family: 'Outfit', sans-serif;">0.00</div>
+                    </div>
+                    
+                    <p id="detailDescription" style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; min-height: 40px;">Descripción detallada aquí.</p>
+                    
+                    <div style="border-top: 1px solid var(--border-light); padding-top: 16px;">
+                        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 12px;">Variantes Disponibles:</h4>
+                        <div class="variant-table-container" style="max-height: 180px;">
+                            <table class="variant-table">
+                                <thead>
+                                    <tr>
+                                        <th>Talla</th>
+                                        <th>Color</th>
+                                        <th>Stock</th>
+                                        <th>Selección</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailVariantBody">
+                                    <!-- Variantes inyectadas por store.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================
          FOOTER
          ================================================== -->
     <footer id="storeFooter">

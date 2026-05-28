@@ -163,11 +163,16 @@ async function fetchProducts() {
                         categoria: p.categoria || 'GENERAL',
                         stock: stockTotal,
                         imagen_url: p.imagen_url || null,
+                        imagen_url_2: p.imagen_url_2 || null,
+                        imagen_url_3: p.imagen_url_3 || null,
+                        imagen_url_4: p.imagen_url_4 || null,
                         variantes: p.variantes || []
                     };
                 });
+                // FILTRADO GLOBAL DE AGOTADOS: Los artículos agotados no se muestran en el sitio web
+                allProducts = allProducts.filter(p => p.stock > 0);
                 console.log(`Cargados ${allProducts.length} productos reales desde Supabase.`);
-                showToast("Catálogo en vivo", "Productos cargados directamente desde la nube.", "success");
+                // Se eliminó la notificación del catálogo en vivo por solicitud del usuario
                 return;
             }
         } catch (e) {
@@ -177,6 +182,8 @@ async function fetchProducts() {
     
     // Carga de respaldo (demostración)
     allProducts = [...FALLBACK_PRODUCTS];
+    // FILTRADO GLOBAL DE AGOTADOS: Los artículos agotados no se muestran en el sitio web
+    allProducts = allProducts.filter(p => p.stock > 0);
     console.log("Cargado catálogo de respaldo offline.");
 }
 
@@ -223,6 +230,12 @@ function setupEvents() {
     document.getElementById('closeModalBtn').addEventListener('click', closeVariantModal);
     document.getElementById('variantModalOverlay').addEventListener('click', (e) => {
         if (e.target.id === 'variantModalOverlay') closeVariantModal();
+    });
+
+    // Cerrar Modal de Detalles
+    document.getElementById('closeDetailModalBtn').addEventListener('click', closeDetailModal);
+    document.getElementById('detailModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'detailModalOverlay') closeDetailModal();
     });
 
     // Checkout / Envío a WhatsApp
@@ -297,14 +310,19 @@ function renderCatalog() {
 
         return `
             <div class="product-card">
-                <div class="product-image-container">
+                <div class="product-image-container product-clickable" onclick="openDetailModal(${p.id})">
                     ${badge}
                     ${mainImg}
                 </div>
                 <div class="product-info">
                     <div class="product-category">${p.categoria}</div>
-                    <div class="product-title" title="${p.nombre}">${p.nombre}</div>
-                    <div class="product-desc">${p.descripcion}</div>
+                    <div class="product-title product-clickable" onclick="openDetailModal(${p.id})" title="${p.nombre}">${p.nombre}</div>
+                    <div class="product-desc product-clickable" onclick="openDetailModal(${p.id})">${p.descripcion}</div>
+                    
+                    <button class="btn-detail-link" onclick="openDetailModal(${p.id})">
+                        <i class="fa-solid fa-eye"></i> Ver Detalle
+                    </button>
+                    
                     <div class="product-footer">
                         <div class="product-price">$${p.precioVenta.toFixed(2)}</div>
                         <button class="btn-add-cart" onclick="handleAddToCart(${p.id})" ${!hasStock ? 'disabled' : ''}>
@@ -584,3 +602,84 @@ function showToast(title, message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 4000);
 }
+
+// ==================================================
+// LÓGICA DE DETALLES DEL PRODUCTO Y GALERÍA (VER DETALLE)
+// ==================================================
+
+// Abrir Modal de Detalles con Galería de Imágenes
+window.openDetailModal = (productId) => {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    const overlay = document.getElementById('detailModalOverlay');
+    document.getElementById('detailModalTitle').textContent = `Detalles de ${product.nombre}`;
+    document.getElementById('detailProductName').textContent = product.nombre;
+    document.getElementById('detailCategory').textContent = product.categoria;
+    document.getElementById('detailProductPrice').textContent = `$${product.precioVenta.toFixed(2)}`;
+    document.getElementById('detailDescription').textContent = product.descripcion;
+    
+    // Cargar Imágenes en la Galería
+    const mainImg = document.getElementById('detailMainImage');
+    mainImg.src = product.imagen_url || 'https://via.placeholder.com/600';
+    
+    const thumbsContainer = document.getElementById('detailThumbnails');
+    const imagesArray = [product.imagen_url, product.imagen_url_2, product.imagen_url_3, product.imagen_url_4].filter(url => url);
+    
+    if (imagesArray.length <= 1) {
+        thumbsContainer.innerHTML = '';
+        thumbsContainer.style.display = 'none';
+    } else {
+        thumbsContainer.style.display = 'flex';
+        thumbsContainer.innerHTML = imagesArray.map((url, i) => `
+            <button class="thumbnail-btn ${i === 0 ? 'active' : ''}" onclick="changeDetailMainImage(this, '${url}')">
+                <img src="${url}" alt="Thumbnail ${i+1}" class="thumbnail-img">
+            </button>
+        `).join('');
+    }
+    
+    // Cargar Variantes en el Modal de Detalles
+    const tbody = document.getElementById('detailVariantBody');
+    const stockVariants = product.variantes.filter(v => v.stock > 0);
+    
+    if (stockVariants.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">Sin stock disponible</td></tr>';
+    } else {
+        tbody.innerHTML = stockVariants.map(v => `
+            <tr>
+                <td style="font-weight:700; color:var(--text-primary);">${v.talla || 'N/A'}</td>
+                <td>${v.color || 'N/A'}</td>
+                <td><span style="font-size:12px; font-weight:600; padding:2px 8px; border-radius:4px; background:var(--success-glow); color:var(--success);">${v.stock} un.</span></td>
+                <td>
+                    <button class="btn btn-primary btn-small" style="padding: 4px 10px; border-radius: 6px; font-size:11px;" onclick="addToCartFromDetails(${product.id}, ${v.id})">
+                        <i class="fa-solid fa-plus"></i> Añadir
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    overlay.classList.add('active');
+};
+
+// Cambiar Imagen Principal
+window.changeDetailMainImage = (btn, url) => {
+    document.querySelectorAll('.thumbnail-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('detailMainImage').src = url;
+};
+
+// Cerrar Modal de Detalles
+window.closeDetailModal = () => {
+    document.getElementById('detailModalOverlay').classList.remove('active');
+};
+
+// Agregar al carrito desde detalles
+window.addToCartFromDetails = (productId, variantId) => {
+    const product = allProducts.find(p => p.id === productId);
+    const variant = product.variantes.find(v => v.id === variantId);
+    if (product && variant) {
+        addToCart(product, variant);
+        // Opcional: no cerrar detalles para permitir seguir viendo, solo dar feedback
+    }
+};

@@ -958,3 +958,64 @@ footer strong {
         padding: 16px;
     }
 }
+
+/* Gallery Thumbnails inside Product Details Modal */
+.thumbnail-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    transition: var(--transition-smooth);
+}
+
+.thumbnail-btn:hover {
+    border-color: var(--border-gold);
+    transform: scale(1.05);
+}
+
+.thumbnail-btn.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Card Action Overlays or clickable areas */
+.product-clickable {
+    cursor: pointer;
+}
+
+.btn-detail-link {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-dark);
+    color: var(--accent);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    width: fit-content;
+}
+
+.btn-detail-link:hover {
+    background: rgba(214, 154, 85, 0.15);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
