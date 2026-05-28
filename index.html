@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- SEO Meta Tags -->
     <title>Dexter Tienda - Tu Catálogo de Compras Premium</title>
-    <meta name="description" content="Explora el catálogo oficial de productos de nuestra tienda. Realiza tus pedidos de forma rápida y segura con entrega directa a domicilio y atención vía WhatsApp.">
-    <meta name="keywords" content="compras, catálogo online, e-commerce, tienda local, whatsapp store, calzado, ropa, accesorios">
+    <meta name="description"
+        content="Explora el catálogo oficial de productos de nuestra tienda. Realiza tus pedidos de forma rápida y segura con entrega directa a domicilio y atención vía WhatsApp.">
+    <meta name="keywords"
+        content="compras, catálogo online, e-commerce, tienda local, whatsapp store, calzado, ropa, accesorios">
     <meta name="author" content="Mora Console & DexterPV">
-    
+
     <!-- Open Graph (Facebook / WhatsApp) -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Dexter Tienda - Catálogo Online Premium">
-    <meta property="og:description" content="Explora nuestro inventario en tiempo real, elige tus variantes preferidas y haz tu pedido al instante vía WhatsApp.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=800&auto=format&fit=crop">
-    
+    <meta property="og:description"
+        content="Explora nuestro inventario en tiempo real, elige tus variantes preferidas y haz tu pedido al instante vía WhatsApp.">
+    <meta property="og:image"
+        content="https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=800&auto=format&fit=crop">
+
     <!-- Stylesheets & Fonts -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
     <!-- ==================================================
@@ -29,9 +35,9 @@
         <div class="container navbar">
             <a href="#" class="logo" id="storeLogo">
                 <i class="fa-solid fa-store" style="color: var(--primary);"></i>
-                <span>Dexter<span class="logo-italic">Tienda</span></span>
+                <span>Imperial<span class="logo-italic">Design</span></span>
             </a>
-            
+
             <div class="nav-actions">
                 <button class="cart-trigger" id="cartBtn">
                     <i class="fa-solid fa-bag-shopping"></i>
@@ -50,7 +56,8 @@
             <span class="hero-tag">Catálogo Exclusivo y Conectado</span>
             <h1 class="hero-title">Estilo, Confort & <span>Colección</span></h1>
             <p class="hero-subtitle">
-                Bienvenido a nuestro escaparate digital de prueba. Explora prendas seleccionadas, calzado de alta gama y accesorios en tendencia. Elige lo que te gusta y haz tu pedido directo.
+                Bienvenido a nuestro escaparate digital de prueba. Explora prendas seleccionadas, calzado de alta gama y
+                accesorios en tendencia. Elige lo que te gusta y haz tu pedido directo.
             </p>
         </div>
     </section>
@@ -62,10 +69,11 @@
         <!-- Barra de Búsqueda y Filtros -->
         <div class="filter-bar" id="catalogFilters">
             <div class="search-box">
-                <input type="text" id="searchInput" class="search-input" placeholder="🔍 ¿Qué estás buscando hoy? Escribe nombre o descripción...">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="🔍 ¿Qué estás buscando hoy? Escribe nombre o descripción...">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
             </div>
-            
+
             <!-- Pestañas de categorías inyectadas por store.js -->
             <div class="categories-container" id="categoriesContainer">
                 <button class="category-tab active" data-category="TODAS">TODAS</button>
@@ -79,7 +87,8 @@
         <div class="catalog-grid" id="catalogGrid">
             <!-- Cargando productos... ( store.js inyectará los productos aquí ) -->
             <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: var(--primary); margin-bottom: 16px;"></i>
+                <i class="fa-solid fa-spinner fa-spin"
+                    style="font-size: 32px; color: var(--primary); margin-bottom: 16px;"></i>
                 <p style="color: var(--text-secondary);">Cargando catálogo premium...</p>
             </div>
         </div>
@@ -99,12 +108,12 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        
+
         <!-- Contenedor de Items del Carrito -->
         <div class="cart-drawer-items" id="cartItemsList">
             <!-- Inyectado por store.js -->
         </div>
-        
+
         <!-- Resumen de Costos y Compra -->
         <div class="cart-drawer-footer">
             <div class="cart-summary-row">
@@ -119,7 +128,7 @@
                 <span>Total a Pagar</span>
                 <span id="summaryTotal">$0.00</span>
             </div>
-            
+
             <button class="btn-checkout" id="checkoutBtn">
                 <i class="fa-solid fa-receipt"></i>
                 <span>Enviar Pedido por WhatsApp</span>
@@ -175,26 +184,38 @@
             <div class="modal-body" style="display: flex; gap: 24px; flex-wrap: wrap; padding: 20px 24px 24px 24px;">
                 <!-- Galería de imágenes (izquierda) -->
                 <div style="flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 12px;">
-                    <div id="detailMainImageContainer" style="width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); background: rgba(0, 0, 0, 0.2); position: relative;">
-                        <img id="detailMainImage" src="" alt="Producto" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);">
+                    <div id="detailMainImageContainer"
+                        style="width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); background: rgba(0, 0, 0, 0.2); position: relative;">
+                        <img id="detailMainImage" src="" alt="Producto"
+                            style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);">
                     </div>
                     <div id="detailThumbnails" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;">
                         <!-- Miniaturas inyectadas dinámicamente -->
                     </div>
                 </div>
-                
+
                 <!-- Información y Variantes (derecha) -->
-                <div style="flex: 1.2; min-width: 280px; display: flex; flex-direction: column; justify-content: flex-start; gap: 16px;">
+                <div
+                    style="flex: 1.2; min-width: 280px; display: flex; flex-direction: column; justify-content: flex-start; gap: 16px;">
                     <div>
-                        <span id="detailCategory" style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;">CATEGORIA</span>
-                        <h2 id="detailProductName" style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-top: 4px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Nombre del Producto</h2>
-                        <div id="detailProductPrice" style="font-size: 22px; font-weight: 800; color: var(--text-primary); font-family: 'Outfit', sans-serif;">0.00</div>
+                        <span id="detailCategory"
+                            style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;">CATEGORIA</span>
+                        <h2 id="detailProductName"
+                            style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-top: 4px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">
+                            Nombre del Producto</h2>
+                        <div id="detailProductPrice"
+                            style="font-size: 22px; font-weight: 800; color: var(--text-primary); font-family: 'Outfit', sans-serif;">
+                            0.00</div>
                     </div>
-                    
-                    <p id="detailDescription" style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; min-height: 40px;">Descripción detallada aquí.</p>
-                    
+
+                    <p id="detailDescription"
+                        style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; min-height: 40px;">
+                        Descripción detallada aquí.</p>
+
                     <div style="border-top: 1px solid var(--border-light); padding-top: 16px;">
-                        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 12px;">Variantes Disponibles:</h4>
+                        <h4
+                            style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 12px;">
+                            Variantes Disponibles:</h4>
                         <div class="variant-table-container" style="max-height: 180px;">
                             <table class="variant-table">
                                 <thead>
@@ -232,4 +253,5 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="store.js"></script>
 </body>
+
 </html>
