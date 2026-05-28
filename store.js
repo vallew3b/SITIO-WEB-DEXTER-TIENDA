@@ -13,6 +13,7 @@ let filteredProducts = [];
 let cart = [];
 let activeCategory = 'TODAS';
 let searchQuery = '';
+let selectedCardSizes = {};
 
 // Teléfono WhatsApp por defecto (Configurable)
 const WHATSAPP_PHONE = '521234567890'; // Reemplazar con el número real de la tienda
@@ -308,6 +309,30 @@ function renderCatalog() {
             ? `<span class="product-badge badge-tag">${p.categoria}</span>`
             : `<span class="product-badge badge-out-of-stock">Agotado</span>`;
 
+        // Extraer tallas únicas de las variantes en stock
+        const uniqueSizes = p.variantes && p.variantes.length > 0 
+            ? [...new Set(p.variantes.filter(v => v.stock > 0).map(v => v.talla).filter(Boolean))]
+            : [];
+
+        let sizesHTML = '';
+        if (uniqueSizes.length > 0) {
+            sizesHTML = `
+                <div style="margin-top: 12px; margin-bottom: 8px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Tallas Disponibles:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${uniqueSizes.map(size => {
+                            const isActive = selectedCardSizes[p.id] === size;
+                            return `
+                                <button class="size-pill-btn ${isActive ? 'active' : ''}" onclick="selectCardSize(event, ${p.id}, '${size}')" data-product-id="${p.id}" data-size="${size}">
+                                    ${size}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         return `
             <div class="product-card">
                 <div class="product-image-container product-clickable" onclick="openDetailModal(${p.id})">
@@ -318,6 +343,8 @@ function renderCatalog() {
                     <div class="product-category">${p.categoria}</div>
                     <div class="product-title product-clickable" onclick="openDetailModal(${p.id})" title="${p.nombre}">${p.nombre}</div>
                     <div class="product-desc product-clickable" onclick="openDetailModal(${p.id})">${p.descripcion}</div>
+                    
+                    ${sizesHTML}
                     
                     <button class="btn-detail-link" onclick="openDetailModal(${p.id})">
                         <i class="fa-solid fa-eye"></i> Ver Detalle
@@ -335,19 +362,50 @@ function renderCatalog() {
     }).join('');
 }
 
-// Manejar clic en "Añadir a carrito" (abre modal si hay variantes)
+// Manejar clic en "Añadir a carrito" desde la tarjeta principal
 window.handleAddToCart = (productId) => {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
     
-    // Si tiene variantes y hay más de una variante disponible, abrir modal
     if (product.variantes && product.variantes.length > 0) {
-        openVariantModal(product);
+        const selectedSize = selectedCardSizes[productId];
+        if (!selectedSize) {
+            showToast("Elige una talla", "Por favor, selecciona una talla antes de añadir al carrito.", "error");
+            
+            // Animación de vibración en las píldoras de talla de este producto
+            document.querySelectorAll(`.size-pill-btn[data-product-id="${productId}"]`).forEach(btn => {
+                btn.classList.add('shake-animation');
+                setTimeout(() => btn.classList.remove('shake-animation'), 500);
+            });
+            return;
+        }
+        
+        // Buscar variante disponible que coincida con la talla seleccionada
+        const matchedVariant = product.variantes.find(v => v.talla === selectedSize && v.stock > 0);
+        if (matchedVariant) {
+            addToCart(product, matchedVariant);
+        } else {
+            showToast("Agotado", "La talla seleccionada no tiene stock disponible.", "error");
+        }
     } else {
-        // Añadir directamente sin variante específica (o variante única)
-        const defaultVar = product.variantes && product.variantes[0] ? product.variantes[0] : null;
-        addToCart(product, defaultVar);
+        // Si no tiene variantes, agregar directamente
+        addToCart(product, null);
     }
+};
+
+// Seleccionar talla desde la tarjeta de producto
+window.selectCardSize = (event, productId, size) => {
+    event.stopPropagation(); // Prevenir que el clic en la talla abra el modal de detalles
+    
+    selectedCardSizes[productId] = size;
+    
+    // Desactivar otros botones de talla en esta tarjeta
+    document.querySelectorAll(`.size-pill-btn[data-product-id="${productId}"]`).forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Activar el botón clicado
+    event.target.classList.add('active');
 };
 
 // Abrir modal de selección de variantes
