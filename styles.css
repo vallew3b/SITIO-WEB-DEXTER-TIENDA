@@ -505,7 +505,7 @@ header.scrolled {
 .cart-drawer {
     position: fixed;
     top: 0;
-    right: -450px;
+    right: -480px;
     width: 100%;
     max-width: 450px;
     height: 100%;
@@ -514,7 +514,7 @@ header.scrolled {
     z-index: 2001;
     display: flex;
     flex-direction: column;
-    box-shadow: -15px 0 40px rgba(0,0,0,0.8);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.1);
     transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
