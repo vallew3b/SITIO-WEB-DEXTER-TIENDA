@@ -847,9 +847,9 @@ header.scrolled {
 footer {
     border-top: 1px solid var(--border-dark);
     padding: 40px 0;
-    background: rgba(12, 10, 9, 0.9);
+    background: rgba(255, 255, 255, 0.85);
     text-align: center;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 footer p {
@@ -886,12 +886,12 @@ footer strong {
 }
 
 .toast {
-    background: rgba(26, 22, 20, 0.95);
-    border: 1px solid var(--border-gold);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid var(--primary);
     backdrop-filter: var(--glass-blur);
     border-radius: 12px;
     padding: 16px 20px;
-    box-shadow: var(--shadow-premium);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     gap: 12px;
