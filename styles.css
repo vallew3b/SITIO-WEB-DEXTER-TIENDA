@@ -278,7 +278,8 @@ header.scrolled {
     display: flex;
     gap: 10px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding: 10px 5px;
+    margin: 0 -5px;
 }
 
 .category-tab {
@@ -779,6 +780,9 @@ header.scrolled {
     max-width: 500px;
     box-shadow: var(--shadow-premium);
     overflow: hidden;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
     transform: scale(0.9);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -803,6 +807,7 @@ header.scrolled {
 
 .modal-body {
     padding: 24px;
+    overflow-y: auto;
 }
 
 .variant-table-container {
