@@ -575,7 +575,7 @@ function updateCartUI() {
 }
 
 // Procesar pedido y enviar a WhatsApp
-function processOrder() {
+async function processOrder() {
     if (cart.length === 0) {
         showToast("Carrito vacío", "Añade productos antes de finalizar.", "error");
         return;
