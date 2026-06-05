@@ -629,7 +629,8 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
         nombre: item.nombre,
         variante: (item.talla || item.color) ? `${item.talla} ${item.color}` : '',
         cantidad: item.cantidad,
-        precio: item.precioUnitario
+        precio: item.precioUnitario,
+        imagen_url: item.imagen_url
     }));
 
     // Insertar en Supabase si está disponible
