@@ -16,7 +16,7 @@ let searchQuery = '';
 let selectedCardSizes = {};
 
 // Teléfono WhatsApp por defecto (Configurable)
-const WHATSAPP_PHONE = '521234567890'; // Reemplazar con el número real de la tienda
+const WHATSAPP_PHONE = '527341439779'; // Reemplazar con el número real de la tienda
 
 // Respaldo de productos Premium si no conecta a Supabase o no hay datos
 const FALLBACK_PRODUCTS = [
