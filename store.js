@@ -620,6 +620,38 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
     window.open(waLink, '_blank');
     
     // Feedback visual y limpiar carrito
+    showToast("Procesando...", "Registrando tu pedido...", "info");
+
+    // Construir detalles del pedido para la base de datos
+    const detalles_pedido = cart.map(item => ({
+        producto_id: item.product_id,
+        variante_id: item.variant_id,
+        nombre: item.nombre,
+        variante: (item.talla || item.color) ? `${item.talla} ${item.color}` : '',
+        cantidad: item.cantidad,
+        precio: item.precioUnitario
+    }));
+
+    // Insertar en Supabase si está disponible
+    if (supabaseClient) {
+        try {
+            const { error } = await supabaseClient.from('pedidos_web').insert([{
+                cliente_nombre: clientName,
+                detalles_pedido: detalles_pedido,
+                total: total, // Usar total en vez de cartTotal
+                estado: 'pendiente'
+            }]);
+            
+            if (error) {
+                console.error("Error guardando pedido en DB:", error);
+            } else {
+                console.log("Pedido guardado en Supabase correctamente.");
+            }
+        } catch (err) {
+            console.error("Error en petición a Supabase:", err);
+        }
+    }
+
     showToast("¡Pedido Enviado!", "Redireccionando a WhatsApp con el desglose de tu carrito...", "success");
     
     cart = [];
