@@ -635,11 +635,15 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
     // Insertar en Supabase si está disponible
     if (supabaseClient) {
         try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const storeId = urlParams.get('store') || urlParams.get('comercio') || '105';
+            
             const { error } = await supabaseClient.from('pedidos_web').insert([{
                 cliente_nombre: clientName,
                 detalles_pedido: detalles_pedido,
                 total: total, // Usar total en vez de cartTotal
-                estado: 'pendiente'
+                estado: 'pendiente',
+                comercio_id: parseInt(storeId)
             }]);
             
             if (error) {
