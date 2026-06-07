@@ -274,10 +274,15 @@ function filterCatalog() {
     }
     
     if (searchQuery) {
-        filteredProducts = filteredProducts.filter(p => 
-            p.nombre.toLowerCase().includes(searchQuery) ||
-            p.descripcion.toLowerCase().includes(searchQuery)
-        );
+        filteredProducts = filteredProducts.filter(p => {
+            const matchNombre = p.nombre && p.nombre.toLowerCase().includes(searchQuery);
+            const matchDesc = p.descripcion && p.descripcion.toLowerCase().includes(searchQuery);
+            const matchVariante = p.variantes && p.variantes.some(v => 
+                (v.talla && v.talla.toLowerCase().includes(searchQuery)) ||
+                (v.color && v.color.toLowerCase().includes(searchQuery))
+            );
+            return matchNombre || matchDesc || matchVariante;
+        });
     }
     
     renderCatalog();
