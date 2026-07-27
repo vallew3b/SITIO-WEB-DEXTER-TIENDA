@@ -483,6 +483,44 @@ header.scrolled {
 }
 
 /* ==================================================
+   CARRUSEL DE NUEVOS PRODUCTOS
+   ================================================== */
+.new-products-carousel {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding: 10px 5px 25px 5px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.new-products-carousel::-webkit-scrollbar {
+    height: 8px;
+}
+.new-products-carousel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.new-products-carousel::-webkit-scrollbar-thumb {
+    background: var(--border-gold);
+    border-radius: 10px;
+}
+.new-products-carousel::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+.new-products-carousel .product-card {
+    min-width: 240px;
+    max-width: 240px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+}
+
+.new-products-carousel .product-image-container {
+    height: 180px;
+}
+
+
+/* ==================================================
    CARRITO PANEL DESLIZABLE (DRAWER)
    ================================================== */
 .cart-drawer-overlay {

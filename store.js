@@ -22,6 +22,7 @@ const WHATSAPP_PHONE = '527341439779'; // Reemplazar con el número real de la t
 const FALLBACK_PRODUCTS = [
     {
         id: 9901,
+        created_at: new Date().toISOString(),
         nombre: "Chaqueta Bomber Terracota",
         descripcion: "Chaqueta acolchada impermeable con detalles premium en color terracota de temporada. Forro interno térmico.",
         precioVenta: 89.99,
@@ -159,6 +160,7 @@ async function fetchProducts() {
                     const stockTotal = (p.variantes || []).reduce((sum, v) => sum + v.stock, 0);
                     return {
                         id: p.id,
+                        created_at: p.created_at,
                         nombre: p.nombre,
                         descripcion: p.descripcion || 'Sin descripción disponible.',
                         precioVenta: p.precio_venta,
@@ -355,19 +357,25 @@ function generateProductCardHTML(p) {
 // Renderizar nuevos productos
 function renderNewProducts() {
     const grid = document.getElementById('newProductsGrid');
+    const section = document.getElementById('newProductsSection');
     if (!grid) return;
     
-    // Seleccionar los últimos 4 productos añadidos (ordenados por ID de mayor a menor)
-    const newProducts = [...allProducts].sort((a, b) => b.id - a.id).slice(0, 4);
+    // Filtrar productos añadidos en los últimos 10 días
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    
+    const newProducts = allProducts.filter(p => {
+        if (!p.created_at) return false;
+        const createdAt = new Date(p.created_at);
+        return createdAt >= tenDaysAgo;
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     if (newProducts.length === 0) {
-        grid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
-                <p>No hay productos nuevos en este momento.</p>
-            </div>
-        `;
+        if (section) section.style.display = 'none';
         return;
     }
+    
+    if (section) section.style.display = 'block';
     
     grid.innerHTML = newProducts.map(p => generateProductCardHTML(p)).join('');
 }
