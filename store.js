@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // 4. Renderizar Interfaz
     renderCategories();
+    renderNewProducts();
     renderCatalog();
     updateCartUI();
 });
@@ -288,6 +289,89 @@ function filterCatalog() {
     renderCatalog();
 }
 
+// Generar HTML de la tarjeta de producto
+function generateProductCardHTML(p) {
+    const hasStock = p.stock > 0;
+    const mainImg = p.imagen_url 
+        ? `<img src="${p.imagen_url}" alt="${p.nombre}" class="product-image">`
+        : `<div class="product-image-fallback"><i class="fa-solid fa-layer-group"></i></div>`;
+        
+    const badge = hasStock 
+        ? `<span class="product-badge badge-tag">${p.categoria}</span>`
+        : `<span class="product-badge badge-out-of-stock">Agotado</span>`;
+
+    // Extraer tallas únicas de las variantes en stock
+    const uniqueSizes = p.variantes && p.variantes.length > 0 
+        ? [...new Set(p.variantes.filter(v => v.stock > 0).map(v => v.talla).filter(Boolean))]
+        : [];
+
+    let sizesHTML = '';
+    if (uniqueSizes.length > 0) {
+        sizesHTML = `
+            <div style="margin-top: 12px; margin-bottom: 8px;">
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Tallas Disponibles:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${uniqueSizes.map(size => {
+                        const isActive = selectedCardSizes[p.id] === size;
+                        return `
+                            <button class="size-pill-btn ${isActive ? 'active' : ''}" onclick="selectCardSize(event, ${p.id}, '${size}')" data-product-id="${p.id}" data-size="${size}">
+                                ${size}
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="product-card">
+            <div class="product-image-container product-clickable" onclick="openDetailModal(${p.id})">
+                ${badge}
+                ${mainImg}
+            </div>
+            <div class="product-info">
+                <div class="product-category">${p.categoria}</div>
+                <div class="product-title product-clickable" onclick="openDetailModal(${p.id})" title="${p.nombre}">${p.nombre}</div>
+                <div class="product-desc product-clickable" onclick="openDetailModal(${p.id})">${p.descripcion}</div>
+                
+                ${sizesHTML}
+                
+                <button class="btn-detail-link" onclick="openDetailModal(${p.id})">
+                    <i class="fa-solid fa-eye"></i> Ver Detalle
+                </button>
+                
+                <div class="product-footer">
+                    <div class="product-price">$${p.precioVenta.toFixed(2)}</div>
+                    <button class="btn-add-cart" onclick="handleAddToCart(${p.id})" ${!hasStock ? 'disabled' : ''}>
+                        <i class="fa-solid fa-cart-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Renderizar nuevos productos
+function renderNewProducts() {
+    const grid = document.getElementById('newProductsGrid');
+    if (!grid) return;
+    
+    // Seleccionar los últimos 4 productos añadidos (ordenados por ID de mayor a menor)
+    const newProducts = [...allProducts].sort((a, b) => b.id - a.id).slice(0, 4);
+    
+    if (newProducts.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+                <p>No hay productos nuevos en este momento.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = newProducts.map(p => generateProductCardHTML(p)).join('');
+}
+
 // Renderizar cuadrícula del catálogo
 function renderCatalog() {
     const grid = document.getElementById('catalogGrid');
@@ -304,67 +388,7 @@ function renderCatalog() {
         return;
     }
     
-    grid.innerHTML = targets.map(p => {
-        const hasStock = p.stock > 0;
-        const mainImg = p.imagen_url 
-            ? `<img src="${p.imagen_url}" alt="${p.nombre}" class="product-image">`
-            : `<div class="product-image-fallback"><i class="fa-solid fa-layer-group"></i></div>`;
-            
-        const badge = hasStock 
-            ? `<span class="product-badge badge-tag">${p.categoria}</span>`
-            : `<span class="product-badge badge-out-of-stock">Agotado</span>`;
-
-        // Extraer tallas únicas de las variantes en stock
-        const uniqueSizes = p.variantes && p.variantes.length > 0 
-            ? [...new Set(p.variantes.filter(v => v.stock > 0).map(v => v.talla).filter(Boolean))]
-            : [];
-
-        let sizesHTML = '';
-        if (uniqueSizes.length > 0) {
-            sizesHTML = `
-                <div style="margin-top: 12px; margin-bottom: 8px;">
-                    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Tallas Disponibles:</div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                        ${uniqueSizes.map(size => {
-                            const isActive = selectedCardSizes[p.id] === size;
-                            return `
-                                <button class="size-pill-btn ${isActive ? 'active' : ''}" onclick="selectCardSize(event, ${p.id}, '${size}')" data-product-id="${p.id}" data-size="${size}">
-                                    ${size}
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        return `
-            <div class="product-card">
-                <div class="product-image-container product-clickable" onclick="openDetailModal(${p.id})">
-                    ${badge}
-                    ${mainImg}
-                </div>
-                <div class="product-info">
-                    <div class="product-category">${p.categoria}</div>
-                    <div class="product-title product-clickable" onclick="openDetailModal(${p.id})" title="${p.nombre}">${p.nombre}</div>
-                    <div class="product-desc product-clickable" onclick="openDetailModal(${p.id})">${p.descripcion}</div>
-                    
-                    ${sizesHTML}
-                    
-                    <button class="btn-detail-link" onclick="openDetailModal(${p.id})">
-                        <i class="fa-solid fa-eye"></i> Ver Detalle
-                    </button>
-                    
-                    <div class="product-footer">
-                        <div class="product-price">$${p.precioVenta.toFixed(2)}</div>
-                        <button class="btn-add-cart" onclick="handleAddToCart(${p.id})" ${!hasStock ? 'disabled' : ''}>
-                            <i class="fa-solid fa-cart-plus"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
+    grid.innerHTML = targets.map(p => generateProductCardHTML(p)).join('');
 }
 
 // Manejar clic en "Añadir a carrito" desde la tarjeta principal
