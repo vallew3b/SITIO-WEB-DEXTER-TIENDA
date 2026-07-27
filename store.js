@@ -360,15 +360,17 @@ function renderNewProducts() {
     const section = document.getElementById('newProductsSection');
     if (!grid) return;
     
-    // Filtrar productos añadidos en los últimos 10 días
+    // Cambiado temporalmente a 365 días para forzar que se muestre algo
     const tenDaysAgo = new Date();
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 365);
     
     const newProducts = allProducts.filter(p => {
         if (!p.created_at) return false;
         const createdAt = new Date(p.created_at);
         return createdAt >= tenDaysAgo;
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8); // Mostrar máximo 8
+    
+    console.log("Nuevos productos encontrados:", newProducts.length);
     
     if (newProducts.length === 0) {
         if (section) section.style.display = 'none';
