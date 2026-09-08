@@ -29,7 +29,7 @@
 <body>
 
     <!-- ==================================================
-         NAVBAR / HEADER
+         NAVBAR / HEADER (ESTILO B&H CON BARRA VERDE)
          ================================================== -->
     <header id="storeHeader">
         <div class="container navbar">
@@ -38,38 +38,51 @@
                 <span>Imperial<span class="logo-italic">Design</span></span>
             </a>
 
+            <!-- Buscador Integrado en Header (Estilo B&H) -->
+            <div class="header-search">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="🔍 ¿Qué estás buscando hoy? Escribe nombre o descripción...">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                </div>
+            </div>
+
             <div class="nav-actions">
                 <button class="cart-trigger" id="cartBtn">
                     <i class="fa-solid fa-bag-shopping"></i>
-                    <span>Ver Carrito</span>
+                    <span class="cart-label">Ver Carrito</span>
                     <span class="cart-count" id="cartTotalCount">0</span>
                 </button>
             </div>
         </div>
+
+        <!-- BARRA VERDE DE CATEGORÍAS (ESTILO B&H) -->
+        <nav class="category-nav-bar" id="categoryNavBar">
+            <div class="container category-nav-container">
+                <div class="categories-container" id="categoriesContainer">
+                    <button class="category-tab active" data-category="TODAS">TODAS</button>
+                    <button class="category-tab" data-category="ROPA">ROPA</button>
+                    <button class="category-tab" data-category="CALZADO">CALZADO</button>
+                    <button class="category-tab" data-category="ACCESORIOS">ACCESORIOS</button>
+                </div>
+                <div class="category-nav-extra">
+                    <button class="category-tab special-tab" id="specialsTab">
+                        <i class="fa-solid fa-fire"></i> Novedades
+                    </button>
+                </div>
+            </div>
+        </nav>
     </header>
 
     <!-- ==================================================
-         HERO SECTION
+         NUEVOS PRODUCTOS (DESTACADOS)
          ================================================== -->
-    <section class="hero-section" id="heroBanner">
-        <div class="container">
-            <span class="hero-tag">Catálogo Exclusivo y Conectado</span>
-            <h1 class="hero-title">IMPERIO DE <span>MODA</span></h1>
-            <p class="hero-subtitle">
-                VISTE CON LA MEJOR CALIDAD EN NUESTROS PRODUCTOS EN NUESTRA TIENDA
-            </p>
-        </div>
-    </section>
-
-    <!-- ==================================================
-         NUEVOS PRODUCTOS
-         ================================================== -->
-    <section class="container" id="newProductsSection" style="margin-bottom: 40px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="font-size: 24px; font-weight: 800; color: var(--text-primary); font-family: 'Outfit', sans-serif;">
-                NUEVOS <span style="color: var(--accent); font-family: 'Playfair Display', serif; font-style: italic;">PRODUCTOS</span>
+    <section class="container" id="newProductsSection" style="margin-top: 30px; margin-bottom: 40px;">
+        <div class="section-title-wrap">
+            <h2 class="section-title-heading">
+                NUEVOS <span class="section-title-accent">PRODUCTOS</span>
             </h2>
-            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">Recién llegados a nuestro catálogo</p>
+            <p class="section-subtitle">Recién llegados a nuestro catálogo oficial</p>
         </div>
         <div class="new-products-carousel" id="newProductsGrid">
             <!-- Cargando productos nuevos... ( store.js inyectará los productos aquí ) -->
@@ -77,23 +90,16 @@
     </section>
 
     <!-- ==================================================
-         SECCIÓN PRINCIPAL: FILTROS & CATÁLOGO
+         SECCIÓN PRINCIPAL: CATÁLOGO COMPLETO
          ================================================== -->
     <main class="container">
-        <!-- Barra de Búsqueda y Filtros -->
-        <div class="filter-bar" id="catalogFilters">
-            <div class="search-box">
-                <input type="text" id="searchInput" class="search-input"
-                    placeholder="🔍 ¿Qué estás buscando hoy? Escribe nombre o descripción...">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            </div>
-
-            <!-- Pestañas de categorías inyectadas por store.js -->
-            <div class="categories-container" id="categoriesContainer">
-                <button class="category-tab active" data-category="TODAS">TODAS</button>
-                <button class="category-tab" data-category="ROPA">ROPA</button>
-                <button class="category-tab" data-category="CALZADO">CALZADO</button>
-                <button class="category-tab" data-category="ACCESORIOS">ACCESORIOS</button>
+        <div class="catalog-header-bar" id="catalogHeaderBar">
+            <div class="catalog-header-info">
+                <h2 class="catalog-heading">
+                    <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i>
+                    Catálogo de Productos
+                </h2>
+                <span class="catalog-badge" id="catalogResultsCount">Cargando inventario...</span>
             </div>
         </div>
 
