@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ==========================================
 // PORTADAS / SLIDES DEL BANNER PRINCIPAL (HERO)
 // ==========================================
-// Aquí puedes agregar tantas portadas como gustes. 'portada_playeras.jpg' es la primera.
+// Puedes configurar la alineación de texto y botón con 'alineacion': "right", "left" o "center".
 const HERO_SLIDES = [
     {
         id: 1,
@@ -143,7 +143,8 @@ const HERO_SLIDES = [
         titulo: "PLAYERAS IMPERIAL DESIGN",
         descripcion: "Diseño urbano exclusivo, algodón premium y estampado de alta definición.",
         botonTexto: "COMPRAR AHORA",
-        categoria: "ROPA"
+        categoria: "ROPA",
+        alineacion: "right" // Alineado a la derecha para dejar visible el estampado de la playera
     },
     {
         id: 2,
@@ -153,7 +154,8 @@ const HERO_SLIDES = [
         titulo: "SUDADERAS & OVERSHIRT",
         descripcion: "Máxima presencia y comodidad con nuestro corte oversized de temporada.",
         botonTexto: "VER SUDADERAS",
-        categoria: "ROPA"
+        categoria: "ROPA",
+        alineacion: "left"
     },
     {
         id: 3,
@@ -163,7 +165,8 @@ const HERO_SLIDES = [
         titulo: "GORRAS & SNAPBACKS",
         descripcion: "Bordados con relieve en hilo de oro y siluetas oficiales.",
         botonTexto: "VER GORRAS",
-        categoria: "ACCESORIOS"
+        categoria: "ACCESORIOS",
+        alineacion: "center"
     },
     {
         id: 4,
@@ -173,7 +176,8 @@ const HERO_SLIDES = [
         titulo: "CALZADO & TENIS",
         descripcion: "Pisa fuerte con la selección de calzado urbano y sneakers exclusivos.",
         botonTexto: "VER CALZADO",
-        categoria: "CALZADO"
+        categoria: "CALZADO",
+        alineacion: "right"
     }
 ];
 
@@ -189,9 +193,11 @@ function renderHeroSlider() {
 
     if (!wrapper || !pagination) return;
 
-    // Renderizar Slides
-    wrapper.innerHTML = HERO_SLIDES.map((slide, i) => `
-        <div class="hero-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+    // Renderizar Slides con alineación dinámica (derecha, izquierda, centro)
+    wrapper.innerHTML = HERO_SLIDES.map((slide, i) => {
+        const alignClass = slide.alineacion === 'right' ? 'align-right' : (slide.alineacion === 'left' ? 'align-left' : 'align-center');
+        return `
+        <div class="hero-slide ${alignClass} ${i === 0 ? 'active' : ''}" data-index="${i}">
             <img src="${slide.imagen}" 
                  onerror="if('${slide.imagenFallback}' && this.src !== '${slide.imagenFallback}') this.src='${slide.imagenFallback}';" 
                  alt="${slide.titulo}" 
@@ -199,14 +205,15 @@ function renderHeroSlider() {
             <div class="hero-slide-overlay"></div>
             <div class="hero-slide-content">
                 <span class="hero-slide-tag">${slide.tag}</span>
-                <h1 class="hero-slide-title">${slide.titulo}</h1>
+                <h2 class="hero-slide-title">${slide.titulo}</h2>
                 <p class="hero-slide-desc">${slide.descripcion}</p>
                 <button class="hero-slide-btn" onclick="handleHeroCTAClick('${slide.categoria}')">
                     ${slide.botonTexto} <i class="fa-solid fa-arrow-right" style="margin-left:8px; font-size:12px;"></i>
                 </button>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     // Renderizar Paginación (Puntos)
     pagination.innerHTML = HERO_SLIDES.map((_, i) => `

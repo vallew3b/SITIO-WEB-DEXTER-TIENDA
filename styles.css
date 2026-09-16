@@ -188,8 +188,8 @@ body {
    BARRA SUPERIOR DE ANUNCIOS (PROMOS)
    ================================================== */
 .top-announcement-bar {
-    background: #000000;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: #454545;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     color: #ffffff;
     font-size: 12.5px;
     font-weight: 500;
@@ -307,7 +307,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 22px;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
@@ -316,13 +316,13 @@ body {
     color: #ffffff;
     border: none;
     outline: none;
-    font-size: 13.5px;
+    font-size: 11.5px;
     font-weight: 700;
     font-family: 'Outfit', sans-serif;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 3px 5px;
     position: relative;
     transition: all 0.25s ease;
 }
@@ -767,9 +767,9 @@ body {
 .hero-slider {
     position: relative;
     width: 100%;
-    min-height: 520px;
-    max-height: 620px;
-    height: 62vh;
+    min-height: 380px;
+    max-height: 460px;
+    height: 48vh;
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -792,6 +792,7 @@ body {
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
+    padding: 0 40px;
 }
 
 .hero-slide-bg {
@@ -813,8 +814,8 @@ body {
 .hero-slide-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%),
-                radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.85) 100%),
+                radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%);
     z-index: 1;
 }
 
@@ -823,11 +824,48 @@ body {
     z-index: 2;
     text-align: center;
     max-width: 820px;
-    padding: 30px 24px;
+    padding: 24px 20px;
     color: #ffffff;
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: all 0.4s ease;
+}
+
+/* Alineaciones dinámicas (Izquierda, Derecha, Centro) */
+.hero-slide.align-right {
+    justify-content: flex-end;
+}
+
+.hero-slide.align-right .hero-slide-content {
+    align-items: flex-end;
+    text-align: right;
+    margin-left: auto;
+    margin-right: 6%;
+    max-width: 560px;
+}
+
+.hero-slide.align-left {
+    justify-content: flex-start;
+}
+
+.hero-slide.align-left .hero-slide-content {
+    align-items: flex-start;
+    text-align: left;
+    margin-right: auto;
+    margin-left: 6%;
+    max-width: 560px;
+}
+
+.hero-slide.align-center {
+    justify-content: center;
+}
+
+.hero-slide.align-center .hero-slide-content {
+    align-items: center;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 720px;
 }
 
 .hero-slide-tag {
@@ -1005,23 +1043,35 @@ body {
 /* Ajustes Responsive para Slider */
 @media (max-width: 991px) {
     .hero-slider {
-        min-height: 400px;
-        max-height: 480px;
-        height: 52vh;
+        min-height: 310px;
+        max-height: 380px;
+        height: 38vh;
+    }
+
+    .hero-slide {
+        padding: 0 16px;
+    }
+
+    .hero-slide.align-right .hero-slide-content,
+    .hero-slide.align-left .hero-slide-content {
+        margin-left: auto;
+        margin-right: auto;
+        align-items: center;
+        text-align: center;
     }
 
     .slider-arrow {
-        width: 38px;
-        height: 38px;
-        font-size: 15px;
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
     }
 
     .slider-arrow-prev {
-        left: 10px;
+        left: 8px;
     }
 
     .slider-arrow-next {
-        right: 10px;
+        right: 8px;
     }
 
     .trust-divider {
