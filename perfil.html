@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Mi Cuenta & Pedidos | Dexter Tienda - Imperial Design</title>
+    <meta name="description" content="Gestiona tu perfil, consulta el estado de tus pedidos y guarda tus prendas favoritas en Dexter Tienda.">
+
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="styles.css?v=5.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        .profile-container {
+            min-height: 85vh;
+            padding: 50px 20px;
+        }
+
+        .profile-wrapper {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 32px;
+        }
+
+        @media (max-width: 880px) {
+            .profile-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Sidebar del Perfil */
+        .profile-sidebar {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            padding: 28px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            height: fit-content;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(201, 162, 101, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #c9a265, #ffffff, #c9a265);
+        }
+
+        .profile-user-card {
+            text-align: center;
+            padding-bottom: 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-avatar {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c9a265, #111111);
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+            border: 2px solid #c9a265;
+            box-shadow: 0 0 25px rgba(201, 162, 101, 0.35);
+        }
+
+        .profile-user-name {
+            font-size: 19px;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 4px;
+            letter-spacing: -0.2px;
+        }
+
+        .profile-user-email {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.3px;
+        }
+
+        .profile-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profile-menu-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.78);
+            padding: 13px 18px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .profile-menu-btn i {
+            font-size: 15px;
+            color: #c9a265;
+            width: 18px;
+            text-align: center;
+        }
+
+        .profile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            transform: translateX(3px);
+        }
+
+        .profile-menu-btn.active {
+            background: rgba(201, 162, 101, 0.18);
+            border-color: rgba(201, 162, 101, 0.5);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(201, 162, 101, 0.15);
+        }
+
+        .btn-logout {
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            color: #f87171;
+            padding: 13px 18px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.25s ease;
+            margin-top: 8px;
+        }
+
+        .btn-logout:hover {
+            background: rgba(220, 38, 38, 0.28);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Área de Contenido Principal */
+        .profile-content-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+
+        .profile-section-title {
+            font-size: 21px;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 26px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 16px;
+        }
+
+        .profile-section-title i {
+            color: #c9a265;
+        }
+
+        .profile-tab-content {
+            display: none;
+        }
+
+        .profile-tab-content.active {
+            display: block;
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Estilo de Formulario Ultra Elegante */
+        .address-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .address-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #c9a265;
+        }
+
+        .form-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-input-icon {
+            position: absolute;
+            left: 15px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 14px 13px 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.11);
+            border-color: #c9a265;
+            box-shadow: 0 0 16px rgba(201, 162, 101, 0.3);
+        }
+
+        .btn-submit-auth {
+            padding: 14px 30px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-submit-auth:hover {
+            background: #c9a265;
+            color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(201, 162, 101, 0.45);
+        }
+
+        /* Tarjetas de Pedidos */
+        .order-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: all 0.25s ease;
+        }
+
+        .order-card:hover {
+            border-color: rgba(201, 162, 101, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+
+        .order-id {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .order-status-badge {
+            font-size: 11.5px;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .status-pendiente {
+            background: rgba(245, 158, 11, 0.16);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        .status-anulado {
+            background: rgba(239, 68, 68, 0.16);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        .status-enviado {
+            background: rgba(59, 130, 246, 0.16);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+        }
+
+        .status-completado, .status-entregado {
+            background: rgba(16, 185, 129, 0.16);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Announcement Bar -->
+    <div class="top-announcement-bar">
+        <div class="container top-announcement-content">
+            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el país</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="store-header">
+        <div class="container header-inner">
+            <div class="header-logo-wrap">
+                <a href="index.html" class="header-logo-link">
+                    <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img" style="height: 44px;">
+                </a>
+            </div>
+            <div style="margin-left: auto;">
+                <a href="index.html" class="sub-nav-link" style="color: #ffffff; text-decoration: none;">
+                    <i class="fa-solid fa-store"></i> Volver al Catálogo de Productos
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Profile Dashboard -->
+    <main class="profile-container">
+        <div class="profile-wrapper">
+            
+            <!-- Sidebar -->
+            <aside class="profile-sidebar">
+                <div class="profile-user-card">
+                    <div class="profile-avatar" id="userAvatar">U</div>
+                    <div class="profile-user-name" id="userName">Cargando...</div>
+                    <div class="profile-user-email" id="userEmail">cargando@correo.com</div>
+                </div>
+
+                <nav class="profile-menu">
+                    <button class="profile-menu-btn active" id="tabMenuDatos" onclick="switchProfileTab('datos')">
+                        <i class="fa-solid fa-location-dot"></i> Mis Datos & Domicilio
+                    </button>
+                    <button class="profile-menu-btn" id="tabMenuPedidos" onclick="switchProfileTab('pedidos')">
+                        <i class="fa-solid fa-box-open"></i> Mis Pedidos Realizados
+                    </button>
+                    <button class="profile-menu-btn" id="tabMenuFavoritos" onclick="switchProfileTab('favoritos')">
+                        <i class="fa-solid fa-heart"></i> Mis Prendas Favoritas
+                    </button>
+                </nav>
+
+                <button class="btn-logout" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                </button>
+            </aside>
+
+            <!-- Content Area -->
+            <section class="profile-content-card">
+                
+                <!-- Alerta Global -->
+                <div id="profileAlert" class="auth-msg" style="margin-bottom: 22px;"></div>
+
+                <!-- TAB 1: MIS DATOS Y DOMICILIO -->
+                <div id="tabContentDatos" class="profile-tab-content active">
+                    <h2 class="profile-section-title">
+                        <i class="fa-solid fa-truck-ramp-box"></i> Datos de Contacto y Domicilio de Envío
+                    </h2>
+                    
+                    <form id="profileForm" onsubmit="saveProfileData(event)">
+                        <div class="address-form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="profNombre">Nombre Completo</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-user form-input-icon"></i>
+                                    <input type="text" id="profNombre" class="form-input" required placeholder="Tu Nombre">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="profTel">Teléfono / WhatsApp</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-brands fa-whatsapp form-input-icon"></i>
+                                    <input type="tel" id="profTel" class="form-input" required placeholder="Tu WhatsApp">
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label" for="profDireccion">Dirección de Envío (Calle y Número)</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-location-dot form-input-icon"></i>
+                                    <input type="text" id="profDireccion" class="form-input" placeholder="Ej. Av. Hidalgo #123, Col. Centro">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="profCiudad">Ciudad / Municipio</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-city form-input-icon"></i>
+                                    <input type="text" id="profCiudad" class="form-input" placeholder="Ej. Cuernavaca">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="profCP">Código Postal</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-map-pin form-input-icon"></i>
+                                    <input type="text" id="profCP" class="form-input" placeholder="Ej. 62000">
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label" for="profReferencias">Referencias del Domicilio</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-circle-info form-input-icon"></i>
+                                    <input type="text" id="profReferencias" class="form-input" placeholder="Ej. Casa de fachada color negro entre calle 1 y calle 2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit-auth" id="btnSaveProfile" style="margin-top: 26px;">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio
+                        </button>
+                    </form>
+                </div>
+
+                <!-- TAB 2: MIS PEDIDOS -->
+                <div id="tabContentPedidos" class="profile-tab-content">
+                    <h2 class="profile-section-title">
+                        <i class="fa-solid fa-receipt"></i> Historial de Mis Pedidos Realizados
+                    </h2>
+
+                    <div id="ordersListContainer">
+                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size: 26px; color: #c9a265;"></i>
+                            <p style="margin-top: 12px;">Cargando tus pedidos desde Supabase...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: MIS FAVORITOS -->
+                <div id="tabContentFavoritos" class="profile-tab-content">
+                    <h2 class="profile-section-title">
+                        <i class="fa-solid fa-heart" style="color: #e63946;"></i> Mis Prendas Favoritas
+                    </h2>
+
+                    <div id="favoritesListContainer">
+                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                            <i class="fa-solid fa-heart" style="font-size: 32px; color: rgba(230,57,70,0.5); margin-bottom: 12px;"></i>
+                            <p>Guarda prendas favoritas desde el catálogo para visualizarlas aquí.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Supabase Client Setup
+        const _dc = (c) => c.map(p => atob(p)).join('');
+        const SUPABASE_URL = _dc(["aHR0cHM6Ly8=","cWxpbmZnc3E=","cHp5aGlvcXk=","Z2V2di5zdXA=","YWJhc2UuY28="]);
+        const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=","VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=","bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=","Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=","M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=","M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=","bG44Q2Vhem00Z3BkSnhUMA=="]);
+
+        let supabaseClient = null;
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
+            // Revisar si viene parámetro en URL (?tab=pedidos o ?tab=datos)
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetTab = urlParams.get('tab');
+            if (targetTab) {
+                switchProfileTab(targetTab);
+            }
+
+            await checkUserSession();
+        });
+
+        async function checkUserSession() {
+            if (!supabaseClient) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session || !session.user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = session.user;
+            renderUserHeaderInfo();
+            await loadProfileData();
+            await loadUserOrders();
+        }
+
+        function renderUserHeaderInfo() {
+            const avatar = document.getElementById('userAvatar');
+            const nameEl = document.getElementById('userName');
+            const emailEl = document.getElementById('userEmail');
+
+            const email = currentUser.email || '';
+            const metadataName = currentUser.user_metadata?.nombre_completo || 'Cliente';
+
+            if (nameEl) nameEl.textContent = metadataName;
+            if (emailEl) emailEl.textContent = email;
+            if (avatar) avatar.textContent = metadataName.charAt(0).toUpperCase();
+
+            // Llenar campos por defecto
+            document.getElementById('profNombre').value = metadataName;
+            document.getElementById('profTel').value = currentUser.user_metadata?.telefono || '';
+        }
+
+        async function loadProfileData() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('clientes')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .maybeSingle();
+
+                if (data) {
+                    if (data.nombre_completo) document.getElementById('profNombre').value = data.nombre_completo;
+                    if (data.telefono) document.getElementById('profTel').value = data.telefono;
+                    if (data.direccion) document.getElementById('profDireccion').value = data.direccion;
+                    if (data.ciudad) document.getElementById('profCiudad').value = data.ciudad;
+                    if (data.cp) document.getElementById('profCP').value = data.cp;
+                    if (data.referencias) document.getElementById('profReferencias').value = data.referencias;
+                }
+            } catch (err) {
+                console.log("Aviso leyendo perfil:", err);
+            }
+        }
+
+        async function saveProfileData(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveProfile');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando...`;
+
+            const updatedData = {
+                id: currentUser.id,
+                email: currentUser.email,
+                nombre_completo: document.getElementById('profNombre').value.trim(),
+                telefono: document.getElementById('profTel').value.trim(),
+                direccion: document.getElementById('profDireccion').value.trim(),
+                ciudad: document.getElementById('profCiudad').value.trim(),
+                cp: document.getElementById('profCP').value.trim(),
+                referencias: document.getElementById('profReferencias').value.trim()
+            };
+
+            const { error } = await supabaseClient
+                .from('clientes')
+                .upsert([updatedData]);
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio`;
+
+            const alertBox = document.getElementById('profileAlert');
+            if (error) {
+                alertBox.textContent = `Aviso al guardar domicilio: ${error.message}`;
+                alertBox.className = 'auth-msg error';
+                alertBox.style.display = 'block';
+            } else {
+                alertBox.textContent = `¡Tus datos y domicilio de envío han sido guardados correctamente!`;
+                alertBox.className = 'auth-msg success';
+                alertBox.style.display = 'block';
+                setTimeout(() => alertBox.style.display = 'none', 3500);
+            }
+        }
+
+        async function loadUserOrders() {
+            const container = document.getElementById('ordersListContainer');
+            if (!container || !currentUser) return;
+
+            try {
+                const userFullName = (currentUser.user_metadata?.nombre_completo || '').trim().toLowerCase();
+                const userFirstName = userFullName.split(' ')[0] || '';
+                const userEmail = (currentUser.email || '').trim().toLowerCase();
+
+                // Consultar todos los pedidos de la tienda 105
+                const { data, error } = await supabaseClient
+                    .from('pedidos_web')
+                    .select('*')
+                    .eq('comercio_id', 105)
+                    .order('id', { ascending: false });
+
+                if (error) {
+                    console.log("Aviso al consultar pedidos_web:", error);
+                }
+
+                // Filtrar en JavaScript los pedidos que pertenecen a esta cuenta (por nombre o email)
+                const userOrders = (data || []).filter(p => {
+                    const cName = (p.cliente_nombre || '').trim().toLowerCase();
+                    const cEmail = (p.email || '').trim().toLowerCase();
+                    if (cEmail && userEmail && cEmail === userEmail) return true;
+                    if (cName && userFullName && (cName.includes(userFullName) || userFullName.includes(cName))) return true;
+                    if (cName && userFirstName && (cName.includes(userFirstName) || userFirstName.includes(cName))) return true;
+                    return false;
+                });
+
+                if (userOrders.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                            <i class="fa-solid fa-box-open" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
+                            <p>Aún no has realizado pedidos con tu cuenta.</p>
+                            <a href="index.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
+                                Explorar Catálogo
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = userOrders.map(p => {
+                    const st = (p.estado || 'pendiente').toLowerCase();
+                    let stClass = 'status-pendiente';
+                    if (st.includes('anulado') || st.includes('cancelado')) stClass = 'status-anulado';
+                    else if (st.includes('enviado')) stClass = 'status-enviado';
+                    else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado')) stClass = 'status-completado';
+
+                    const dateStr = p.created_at ? new Date(p.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Reciente';
+
+                    return `
+                    <div class="order-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 20px; margin-bottom: 16px;">
+                        <div class="order-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                            <span class="order-id" style="font-weight: 800; font-size: 15px; color: #ffffff;">Pedido #${p.id}</span>
+                            <span class="order-status-badge ${stClass}">${(p.estado || 'PENDIENTE').toUpperCase()}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13.5px; color:rgba(255,255,255,0.85);">
+                            <span><i class="fa-regular fa-clock" style="color:#c9a265; margin-right: 6px;"></i> ${dateStr}</span>
+                            <strong style="font-size:17px; color:#c9a265;">$${(p.total || 0).toFixed(2)}</strong>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                container.innerHTML = `<p style="color: rgba(255,255,255,0.6);">Historial de pedidos disponible próximamente.</p>`;
+            }
+        }
+
+        function switchProfileTab(tab) {
+            document.querySelectorAll('.profile-menu-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
+
+            if (tab === 'datos' || tab === 'direccion') {
+                document.getElementById('tabMenuDatos').classList.add('active');
+                document.getElementById('tabContentDatos').classList.add('active');
+            } else if (tab === 'pedidos') {
+                document.getElementById('tabMenuPedidos').classList.add('active');
+                document.getElementById('tabContentPedidos').classList.add('active');
+            } else if (tab === 'favoritos') {
+                document.getElementById('tabMenuFavoritos').classList.add('active');
+                document.getElementById('tabContentFavoritos').classList.add('active');
+            }
+        }
+
+        async function handleLogout() {
+            if (supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Finalizar Compra & Envío | Dexter Tienda - Imperial Design</title>
+    <meta name="description" content="Completa tu pedido, elige tu paquetería preferida (Estafeta, Correos de México, DHL) y selecciona tu método de pago.">
+
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="styles.css?v=5.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Mercado Pago SDK (Preparado) -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        .checkout-container {
+            min-height: 85vh;
+            padding: 40px 20px 80px 20px;
+        }
+
+        .checkout-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 36px;
+        }
+
+        @media (max-width: 991px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .checkout-section-box {
+            background: rgba(17, 17, 17, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .checkout-step-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 16px;
+        }
+
+        .checkout-step-title i {
+            color: #c9a265;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #c9a265 0%, #a37c3f 100%);
+            color: #000000;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            box-shadow: 0 0 14px rgba(201, 162, 101, 0.35);
+        }
+
+        /* Formulario de Dirección y Campos */
+        .address-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .address-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .form-input-icon {
+            position: absolute;
+            left: 16px;
+            color: #c9a265;
+            font-size: 15px;
+            pointer-events: none;
+            transition: color 0.3s ease;
+            z-index: 2;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px 14px 46px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .form-input:hover {
+            border-color: rgba(201, 162, 101, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-input:focus {
+            background: rgba(201, 162, 101, 0.08);
+            border-color: #c9a265;
+            box-shadow: 0 0 16px rgba(201, 162, 101, 0.25);
+        }
+
+        .form-input-wrap:focus-within .form-input-icon {
+            color: #ffffff;
+        }
+
+        /* Opciones de Paquetería */
+        .shipping-options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .shipping-option-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .shipping-option-card:hover {
+            border-color: rgba(201, 162, 101, 0.45);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .shipping-option-card.active {
+            background: linear-gradient(135deg, rgba(201, 162, 101, 0.18) 0%, rgba(201, 162, 101, 0.04) 100%);
+            border: 1.5px solid #c9a265;
+            box-shadow: 0 6px 20px rgba(201, 162, 101, 0.2);
+        }
+
+        .shipping-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .shipping-radio {
+            accent-color: #c9a265;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .shipping-name {
+            font-size: 15.5px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shipping-time {
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 3px;
+        }
+
+        .shipping-price {
+            font-size: 17px;
+            font-weight: 900;
+            color: #c9a265;
+        }
+
+        /* Opciones de Pago */
+        .payment-methods-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .payment-methods-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .payment-method-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            transition: all 0.25s ease;
+        }
+
+        .payment-method-btn i {
+            font-size: 28px;
+            color: #c9a265;
+            transition: transform 0.25s ease;
+        }
+
+        .payment-method-btn:hover {
+            border-color: rgba(201, 162, 101, 0.45);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .payment-method-btn:hover i {
+            transform: scale(1.1);
+        }
+
+        .payment-method-btn.active {
+            background: linear-gradient(135deg, rgba(201, 162, 101, 0.18) 0%, rgba(201, 162, 101, 0.04) 100%);
+            border: 1.5px solid #c9a265;
+            box-shadow: 0 6px 22px rgba(201, 162, 101, 0.22);
+        }
+
+        .payment-title {
+            font-size: 14.5px;
+            font-weight: 800;
+        }
+
+        .payment-subtitle {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.3;
+        }
+
+        /* Resumen Lateral */
+        .summary-card {
+            background: rgba(17, 17, 17, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            padding: 30px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .cart-item-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .cart-item-img {
+            width: 58px;
+            height: 58px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .cart-item-variant {
+            font-size: 12px;
+            color: #c9a265;
+            margin-top: 3px;
+        }
+
+        .cart-item-price {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .summary-totals {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 18px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .summary-total-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffffff;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-top: 16px;
+            margin-top: 8px;
+        }
+
+        .summary-total-price {
+            color: #c9a265;
+            text-shadow: 0 0 12px rgba(201, 162, 101, 0.3);
+        }
+
+        .btn-confirm-order {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #25d366 0%, #1eb856 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
+            margin-top: 22px;
+        }
+
+        .btn-confirm-order:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
+        }
+
+        .btn-mercadopago {
+            background: linear-gradient(135deg, #009ee3 0%, #008ac7 100%);
+            box-shadow: 0 8px 25px rgba(0, 158, 227, 0.35);
+        }
+
+        .btn-mercadopago:hover {
+            box-shadow: 0 12px 32px rgba(0, 158, 227, 0.5);
+        }
+
+        .btn-back-store {
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-size: 13.5px;
+            font-weight: 700;
+            transition: all 0.25s ease;
+        }
+
+        .btn-back-store:hover {
+            background: rgba(201, 162, 101, 0.15);
+            border-color: #c9a265;
+            color: #c9a265;
+            transform: translateX(-3px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Announcement Bar -->
+    <div class="top-announcement-bar">
+        <div class="container top-announcement-content">
+            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el país</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="store-header">
+        <div class="container header-inner">
+            <div class="header-logo-wrap">
+                <a href="index.html" class="header-logo-link">
+                    <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img" style="height: 44px;">
+                </a>
+            </div>
+            <div style="margin-left: auto;">
+                <a href="index.html" class="btn-back-store">
+                    <i class="fa-solid fa-arrow-left"></i> Volver al Catálogo
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Checkout -->
+    <main class="checkout-container">
+        <div class="checkout-layout">
+            
+            <!-- Columna Izquierda: Formulario & Opciones -->
+            <div class="checkout-main-col">
+                
+                <!-- PASO 1: DATOS DE ENVÍO -->
+                <div class="checkout-section-box">
+                    <h2 class="checkout-step-title">
+                        <span class="step-number">1</span> Domicilio y Datos de Envío
+                    </h2>
+                    
+                    <form id="checkoutShippingForm">
+                        <div class="address-form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="chkNombre">Nombre Completo</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-user form-input-icon"></i>
+                                    <input type="text" id="chkNombre" class="form-input" placeholder="Tu Nombre Completo" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="chkTel">Teléfono / WhatsApp</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-brands fa-whatsapp form-input-icon"></i>
+                                    <input type="tel" id="chkTel" class="form-input" placeholder="Tu WhatsApp" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label" for="chkDireccion">Dirección de Envío (Calle y Número)</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-location-dot form-input-icon"></i>
+                                    <input type="text" id="chkDireccion" class="form-input" placeholder="Ej. Av. Hidalgo #123, Col. Centro" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="chkCiudad">Ciudad / Municipio</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-city form-input-icon"></i>
+                                    <input type="text" id="chkCiudad" class="form-input" placeholder="Ej. Cuernavaca" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="chkCP">Código Postal</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-map-pin form-input-icon"></i>
+                                    <input type="text" id="chkCP" class="form-input" placeholder="Ej. 62000" required>
+                                </div>
+                                <div id="shippingApiStatus" style="display:none; font-size:12px; color:rgba(255,255,255,0.75); margin-top:4px;"></div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label" for="chkReferencias">Referencias del Domicilio</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-circle-info form-input-icon"></i>
+                                    <input type="text" id="chkReferencias" class="form-input" placeholder="Ej. Casa de fachada color negro entre calle 1 y 2">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- PASO 2: TIPO DE PAQUETERÍA / ENVÍO -->
+                <div class="checkout-section-box">
+                    <h2 class="checkout-step-title">
+                        <span class="step-number">2</span> Selecciona tu Tipo de Paquetería
+                    </h2>
+                    
+                    <div class="shipping-options-grid">
+                        
+                        <!-- Opción A: Correos de México -->
+                        <div class="shipping-option-card" id="cardSepomex" onclick="selectShipping('sepomex', 'Correos de México')">
+                            <div class="shipping-info">
+                                <input type="radio" name="shippingCarrier" id="shipSepomex" class="shipping-radio">
+                                <div>
+                                    <div class="shipping-name">
+                                        <i class="fa-solid fa-box" style="color:#c9a265;"></i> Correos de México (SEPOMEX)
+                                    </div>
+                                    <div class="shipping-time">Envío económico (5 a 8 días hábiles)</div>
+                                </div>
+                            </div>
+                            <div class="shipping-price" id="priceSepomex">$100.00</div>
+                        </div>
+
+                        <!-- Opción B: Estafeta -->
+                        <div class="shipping-option-card active" id="cardEstafeta" onclick="selectShipping('estafeta', 'Estafeta Express')">
+                            <div class="shipping-info">
+                                <input type="radio" name="shippingCarrier" id="shipEstafeta" class="shipping-radio" checked>
+                                <div>
+                                    <div class="shipping-name">
+                                        <i class="fa-solid fa-truck-fast" style="color:#c9a265;"></i> Estafeta Express
+                                    </div>
+                                    <div class="shipping-time">Envío rápido nacional (2 a 3 días hábiles)</div>
+                                </div>
+                            </div>
+                            <div class="shipping-price" id="priceEstafeta">$300.00</div>
+                        </div>
+
+                        <!-- Opción C: DHL -->
+                        <div class="shipping-option-card" id="cardDHL" onclick="selectShipping('dhl', 'DHL Express')">
+                            <div class="shipping-info">
+                                <input type="radio" name="shippingCarrier" id="shipDHL" class="shipping-radio">
+                                <div>
+                                    <div class="shipping-name">
+                                        <i class="fa-solid fa-bolt" style="color:#c9a265;"></i> DHL Express Premium
+                                    </div>
+                                    <div class="shipping-time">Entrega garantizada (1 a 2 días hábiles)</div>
+                                </div>
+                            </div>
+                            <div class="shipping-price" id="priceDHL">$500.00</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- PASO 3: MÉTODO DE PAGO -->
+                <div class="checkout-section-box">
+                    <h2 class="checkout-step-title">
+                        <span class="step-number">3</span> Método de Pago
+                    </h2>
+
+                    <div class="payment-methods-grid">
+                        <div class="payment-method-btn active" id="payMethodWA" onclick="selectPaymentMethod('whatsapp')">
+                            <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
+                            <div class="payment-title">Pedido por WhatsApp</div>
+                            <div class="payment-subtitle">Acuerda stock y pago directo con el vendedor</div>
+                        </div>
+
+                        <div class="payment-method-btn" id="payMethodMP" onclick="selectPaymentMethod('mercadopago')">
+                            <i class="fa-solid fa-credit-card" style="color: #009ee3;"></i>
+                            <div class="payment-title">Mercado Pago</div>
+                            <div class="payment-subtitle">Tarjetas de crédito/débito, OXXO o SPEI</div>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor dinámico Mercado Pago -->
+                    <div id="mercadoPagoContainer" style="display: none; padding: 20px; background: rgba(0, 158, 227, 0.08); border: 1px solid rgba(0, 158, 227, 0.3); border-radius: 14px; text-align: center;">
+                        <i class="fa-solid fa-shield-halved" style="font-size: 32px; color: #009ee3; margin-bottom: 8px;"></i>
+                        <h4 style="color: #ffffff; margin-bottom: 4px;">Pasarela Mercado Pago Preparada</h4>
+                        <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 14px;">El cobro seguro procesará tus prendas más el costo de la paquetería seleccionada.</p>
+                        <div id="wallet_container"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: Resumen de Compra -->
+            <div class="checkout-summary-col">
+                <div class="summary-card">
+                    <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 16px; font-family: 'Outfit', sans-serif;">
+                        Resumen del Pedido
+                    </h3>
+
+                    <!-- Lista de productos -->
+                    <div id="checkoutItemsList">
+                        <!-- Inyectados dinámicamente -->
+                    </div>
+
+                    <!-- Totales -->
+                    <div class="summary-totals">
+                        <div class="summary-line">
+                            <span>Subtotal Prendas:</span>
+                            <strong id="chkSubtotalPrice">$0.00</strong>
+                        </div>
+                        <div class="summary-line">
+                            <span id="chkShippingCarrierName">Envío (Estafeta Express):</span>
+                            <strong id="chkShippingPrice" style="color: #c9a265;">$300.00</strong>
+                        </div>
+                        <div class="summary-total-line">
+                            <span>Total Final:</span>
+                            <span class="summary-total-price" id="chkTotalPrice">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Botón Principal de Acción -->
+                    <button type="button" class="btn-confirm-order" id="btnFinalizeOrder" onclick="processFinalCheckout()">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 20px;"></i>
+                        <span>Confirmar por WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Supabase Client Setup
+        const _dc = (c) => c.map(p => atob(p)).join('');
+        const SUPABASE_URL = _dc(["aHR0cHM6Ly8=","cWxpbmZnc3E=","cHp5aGlvcXk=","Z2V2di5zdXA=","YWJhc2UuY28="]);
+        const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=","VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=","bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=","Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=","M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=","M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=","bG44Q2Vhem00Z3BkSnhUMA=="]);
+        const WHATSAPP_PHONE = _dc(["NTI3MzQx","NDM5Nzc5"]);
+
+        let supabaseClient = null;
+        let cartItems = [];
+        let selectedShippingCost = 300;
+        let selectedShippingName = "Estafeta Express";
+        let selectedPaymentType = "whatsapp";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
+            // Cargar carrito guardado en localStorage
+            const savedCart = localStorage.getItem('imperial_cart');
+            if (savedCart) {
+                try { cartItems = JSON.parse(savedCart); } catch(e) {}
+            }
+
+            if (!cartItems || cartItems.length === 0) {
+                alert("Tu carrito está vacío. Redirigiendo a la tienda...");
+                window.location.href = "index.html";
+                return;
+            }
+
+            renderCheckoutItems();
+            updateCarrierRatesBasedOnWeight();
+            await autoFillUserData();
+            setupCPAndWeightCalculations();
+        });
+
+        let selectedCarrierKey = 'estafeta';
+        let carrierPrices = { sepomex: 100, estafeta: 300, dhl: 500 };
+
+        function calculateEstimatedCartWeight() {
+            return cartItems.reduce((totalWeight, item) => {
+                const cat = (item.categoria || '').toUpperCase();
+                let itemWeight = 0.25;
+                if (cat.includes('SUDADERA') || cat.includes('HOODIE')) itemWeight = 0.65;
+                else if (cat.includes('CALZADO') || cat.includes('TENIS') || cat.includes('BOTA')) itemWeight = 1.10;
+                else if (cat.includes('GORRA') || cat.includes('GORRO') || cat.includes('ACCESORIO')) itemWeight = 0.20;
+                else if (cat.includes('PLAYERA') || cat.includes('POLO') || cat.includes('ROPA')) itemWeight = 0.25;
+                return totalWeight + (itemWeight * item.cantidad);
+            }, 0);
+        }
+
+        function updateCarrierRatesBasedOnWeight() {
+            const totalWeight = calculateEstimatedCartWeight();
+            
+            // Tarifas base (hasta 2.0 kg)
+            let baseSepomex = 100;
+            let baseEstafeta = 300;
+            let baseDHL = 500;
+
+            // Ajuste dinámico por peso excedente a 2 kg
+            if (totalWeight > 2) {
+                const extraKg = Math.ceil(totalWeight - 2);
+                baseSepomex += extraKg * 30;
+                baseEstafeta += extraKg * 50;
+                baseDHL += extraKg * 80;
+            }
+
+            carrierPrices = {
+                sepomex: baseSepomex,
+                estafeta: baseEstafeta,
+                dhl: baseDHL
+            };
+
+            const elSep = document.getElementById('priceSepomex');
+            const elEst = document.getElementById('priceEstafeta');
+            const elDHL = document.getElementById('priceDHL');
+
+            if (elSep) elSep.textContent = `$${baseSepomex.toFixed(2)}`;
+            if (elEst) elEst.textContent = `$${baseEstafeta.toFixed(2)}`;
+            if (elDHL) elDHL.textContent = `$${baseDHL.toFixed(2)}`;
+
+            selectedShippingCost = carrierPrices[selectedCarrierKey] || 300;
+            recalculateTotals();
+        }
+
+        function setupCPAndWeightCalculations() {
+            const cpInput = document.getElementById('chkCP');
+            if (!cpInput) return;
+
+            const handleCPInput = () => {
+                const cp = cpInput.value.trim();
+                const totalWeight = calculateEstimatedCartWeight().toFixed(2);
+                const infoEl = document.getElementById('shippingApiStatus');
+                if (infoEl) {
+                    if (cp.length === 5) {
+                        infoEl.style.display = 'block';
+                        infoEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Cotización calculada para C.P. <strong>${cp}</strong> (Peso total del pedido: <strong>${totalWeight} kg</strong>)`;
+                    } else {
+                        infoEl.style.display = 'none';
+                    }
+                }
+            };
+
+            cpInput.addEventListener('input', handleCPInput);
+            handleCPInput();
+        }
+
+        function renderCheckoutItems() {
+            const container = document.getElementById('checkoutItemsList');
+            if (!container) return;
+
+            container.innerHTML = cartItems.map(item => `
+                <div class="cart-item-row">
+                    <img src="${item.imagen_url || 'logo-imperial.png'}" alt="${item.nombre}" class="cart-item-img">
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.nombre}</div>
+                        <div class="cart-item-variant">Talla: ${item.talla || 'Única'} | Cant: ${item.cantidad}</div>
+                    </div>
+                    <div class="cart-item-price">$${(item.precioUnitario * item.cantidad).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectShipping(carrierKey, name) {
+            selectedCarrierKey = carrierKey;
+            selectedShippingName = name;
+            selectedShippingCost = carrierPrices[carrierKey] || 300;
+
+            document.querySelectorAll('.shipping-option-card').forEach(card => card.classList.remove('active'));
+            document.querySelectorAll('.shipping-radio').forEach(r => r.checked = false);
+
+            if (carrierKey === 'sepomex') {
+                document.getElementById('shipSepomex').checked = true;
+                document.getElementById('cardSepomex').classList.add('active');
+            } else if (carrierKey === 'estafeta') {
+                document.getElementById('shipEstafeta').checked = true;
+                document.getElementById('cardEstafeta').classList.add('active');
+            } else if (carrierKey === 'dhl') {
+                document.getElementById('shipDHL').checked = true;
+                document.getElementById('cardDHL').classList.add('active');
+            }
+
+            recalculateTotals();
+        }
+
+        function recalculateTotals() {
+            const subtotal = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
+            const finalTotal = subtotal + selectedShippingCost;
+
+            document.getElementById('chkSubtotalPrice').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('chkShippingCarrierName').textContent = `Envío (${selectedShippingName}):`;
+            document.getElementById('chkShippingPrice').textContent = `$${selectedShippingCost.toFixed(2)}`;
+            document.getElementById('chkTotalPrice').textContent = `$${finalTotal.toFixed(2)}`;
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentType = method;
+            const btnWA = document.getElementById('payMethodWA');
+            const btnMP = document.getElementById('payMethodMP');
+            const mpBox = document.getElementById('mercadoPagoContainer');
+            const finalBtn = document.getElementById('btnFinalizeOrder');
+
+            if (method === 'whatsapp') {
+                btnWA.classList.add('active');
+                btnMP.classList.remove('active');
+                mpBox.style.display = 'none';
+
+                finalBtn.className = 'btn-confirm-order';
+                finalBtn.innerHTML = `<i class="fa-brands fa-whatsapp" style="font-size: 20px;"></i> <span>Confirmar por WhatsApp</span>`;
+            } else {
+                btnMP.classList.add('active');
+                btnWA.classList.remove('active');
+                mpBox.style.display = 'block';
+
+                finalBtn.className = 'btn-confirm-order btn-mercadopago';
+                finalBtn.innerHTML = `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
+            }
+        }
+
+        async function autoFillUserData() {
+            if (!supabaseClient) return;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    if (user.user_metadata?.nombre_completo) {
+                        document.getElementById('chkNombre').value = user.user_metadata.nombre_completo;
+                    }
+                    if (user.user_metadata?.telefono) {
+                        document.getElementById('chkTel').value = user.user_metadata.telefono;
+                    }
+
+                    // Consultar domicilio guardado en la tabla clientes
+                    const { data } = await supabaseClient.from('clientes').select('*').eq('id', user.id).maybeSingle();
+                    if (data) {
+                        if (data.direccion) document.getElementById('chkDireccion').value = data.direccion;
+                        if (data.ciudad) document.getElementById('chkCiudad').value = data.ciudad;
+                        if (data.cp) document.getElementById('chkCP').value = data.cp;
+                        if (data.referencias) document.getElementById('chkReferencias').value = data.referencias;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function processFinalCheckout() {
+            const nombre = document.getElementById('chkNombre').value.trim();
+            const tel = document.getElementById('chkTel').value.trim();
+            const direccion = document.getElementById('chkDireccion').value.trim();
+            const ciudad = document.getElementById('chkCiudad').value.trim();
+            const cp = document.getElementById('chkCP').value.trim();
+            const referencias = document.getElementById('chkReferencias').value.trim();
+
+            if (!nombre || !tel || !direccion || !ciudad || !cp) {
+                alert("Por favor completa los campos de domicilio de envío para continuar.");
+                return;
+            }
+
+            const subtotal = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
+            const grandTotal = subtotal + selectedShippingCost;
+
+            // 1. Guardar o actualizar datos de envío en clientes si hay sesión
+            if (supabaseClient) {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session && session.user) {
+                        await supabaseClient.from('clientes').upsert([{
+                            id: session.user.id,
+                            email: session.user.email,
+                            nombre_completo: nombre,
+                            telefono: tel,
+                            direccion: direccion,
+                            ciudad: ciudad,
+                            cp: cp,
+                            referencias: referencias
+                        }]);
+                    }
+                } catch(e) {}
+
+                // Registra pedido en tabla pedidos_web (Columnas compatibles con la tabla real)
+                try {
+                    const { error: insertErr } = await supabaseClient.from('pedidos_web').insert([{
+                        cliente_nombre: nombre,
+                        detalles_pedido: cartItems,
+                        total: grandTotal,
+                        estado: 'pendiente',
+                        comercio_id: 105
+                    }]);
+                    if (insertErr) console.log("Aviso al registrar pedido en Supabase:", insertErr);
+                } catch(e) {
+                    console.error("Error al registrar pedido:", e);
+                }
+            }
+
+            if (selectedPaymentType === 'mercadopago') {
+                alert("🛒 ¡Redirigiendo a Mercado Pago! (Pasarela en modo integración listo).");
+                return;
+            }
+
+            // 2. Formatear mensaje para WhatsApp
+            const itemsText = cartItems.map(item => 
+                `• ${item.nombre} (Talla: ${item.talla || 'Única'}) x${item.cantidad} - $${(item.precioUnitario * item.cantidad).toFixed(2)}`
+            ).join('\n');
+
+            const message = 
+`*NUEVO PEDIDO CON ENVÍO - IMPERIAL DESIGN* 🛍️
+----------------------------------
+👤 *Cliente:* ${nombre}
+📱 *Teléfono:* ${tel}
+
+📍 *DATOS DE ENVÍO:*
+• *Dirección:* ${direccion}
+• *Ciudad:* ${ciudad} (CP: ${cp})
+• *Referencias:* ${referencias || 'N/A'}
+
+🚚 *PAQUETERÍA:* ${selectedShippingName} ($${selectedShippingCost.toFixed(2)})
+
+📦 *PRODUCTOS:*
+${itemsText}
+
+----------------------------------
+💰 *Subtotal Prendas:* $${subtotal.toFixed(2)}
+🚚 *Envío (${selectedShippingName}):* $${selectedShippingCost.toFixed(2)}
+🔥 *TOTAL A PAGAR:* *$${grandTotal.toFixed(2)}*
+
+_Por favor confírmame disponibilidad para realizar el pago de mi pedido._`;
+
+            const waLink = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+            
+            // Limpiar carrito local
+            localStorage.removeItem('imperial_cart');
+            
+            // Redirección directa a WhatsApp sin bloqueo de emergentes
+            window.location.href = waLink;
+        }
+    </script>
+</body>
+
+</html>

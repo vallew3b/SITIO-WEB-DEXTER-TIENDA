@@ -101,10 +101,29 @@
                 <button class="header-icon-btn" id="wishlistBtn" aria-label="Favoritos" title="Favoritos">
                     <i class="fa-regular fa-heart"></i>
                 </button>
-                <button class="header-icon-btn" id="userBtn" aria-label="Mi Cuenta & Contacto"
-                    title="Contacto & Perfil">
-                    <i class="fa-regular fa-user"></i>
-                </button>
+                <div class="header-user-dropdown-wrap" id="userDropdownWrap">
+                    <button class="header-icon-btn" id="userBtn" aria-label="Mi Cuenta & Perfil" title="Mi Cuenta & Perfil">
+                        <i class="fa-regular fa-user"></i>
+                    </button>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <div class="dropdown-user-info" id="dropdownUserInfo">
+                            <span class="dropdown-user-name" id="dropdownUserName">Mi Cuenta</span>
+                            <span class="dropdown-user-email" id="dropdownUserEmail">Sesión</span>
+                        </div>
+                        <div id="dropdownAuthLinks">
+                            <a href="perfil.html?tab=datos" class="dropdown-item">
+                                <i class="fa-solid fa-location-dot"></i> Dirección y Domicilio
+                            </a>
+                            <a href="perfil.html?tab=pedidos" class="dropdown-item">
+                                <i class="fa-solid fa-box-open"></i> Mis Pedidos
+                            </a>
+                            <div style="height:1px; background:rgba(255,255,255,0.08); margin:6px 0;"></div>
+                            <button type="button" onclick="handleGlobalLogout()" class="dropdown-item logout" id="dropdownLogoutBtn">
+                                <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <button class="cart-trigger" id="cartBtn" aria-label="Ver Carrito">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span class="cart-count" id="cartTotalCount">0</span>
@@ -271,8 +290,8 @@
             </div>
 
             <button class="btn-checkout" id="checkoutBtn">
-                <i class="fa-solid fa-receipt"></i>
-                <span>Enviar Pedido por WhatsApp</span>
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span>Realizar Pedido</span>
             </button>
         </div>
     </div>

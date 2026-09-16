@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Iniciar Sesión & Registro | Dexter Tienda - Imperial Design</title>
+    <meta name="description" content="Accede a tu cuenta o regístrate en Dexter Tienda para gestionar tus pedidos y guardar tus prendas favoritas.">
+
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="styles.css?v=5.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .auth-container {
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .auth-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 460px;
+            padding: 36px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 162, 101, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #c9a265, #ffffff, #c9a265);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            filter: brightness(0) invert(1) drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
+            margin-bottom: 16px;
+        }
+
+        .auth-subtitle {
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.5px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab-btn.active {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-form {
+            display: none;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .auth-form.active {
+            display: flex;
+            animation: fadeIn 0.35s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--accent, #c9a265);
+        }
+
+        .form-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-input-icon {
+            position: absolute;
+            left: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent, #c9a265);
+            box-shadow: 0 0 12px rgba(201, 162, 101, 0.25);
+        }
+
+        .btn-submit-auth {
+            padding: 13px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit-auth:hover {
+            background: var(--accent, #c9a265);
+            color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(201, 162, 101, 0.4);
+        }
+
+        .auth-msg {
+            font-size: 13px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+
+        .auth-msg.error {
+            display: block;
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            color: #f87171;
+        }
+
+        .auth-msg.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+        }
+
+        .back-to-store {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 13px;
+            margin-top: 22px;
+            transition: color 0.2s ease;
+        }
+
+        .back-to-store:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top announcement bar -->
+    <div class="top-announcement-bar">
+        <div class="container top-announcement-content">
+            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el país</span>
+        </div>
+    </div>
+
+    <!-- Header simplificado -->
+    <header class="store-header">
+        <div class="container header-inner" style="justify-content: center;">
+            <a href="index.html" class="header-logo-link">
+                <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img" style="height: 44px;">
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Auth Section -->
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="logo-imperial.png" alt="Imperial Design" class="auth-logo">
+                <div class="auth-subtitle">Accede a tu cuenta de cliente en Imperial Design</div>
+            </div>
+
+            <!-- Tabs: Iniciar Sesión / Registro -->
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+                <button class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Crear Cuenta</button>
+            </div>
+
+            <!-- Alert messages -->
+            <div id="authAlert" class="auth-msg"></div>
+
+            <!-- Formulario 1: Iniciar Sesión -->
+            <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Correo Electrónico</label>
+                    <div class="form-input-wrap">
+                        <i class="fa-solid fa-envelope form-input-icon"></i>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="tu@correo.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Contraseña</label>
+                    <div class="form-input-wrap">
+                        <i class="fa-solid fa-lock form-input-icon"></i>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-auth" id="loginSubmitBtn">
+                    <span>Entrar a mi Cuenta</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <!-- Formulario 2: Registro -->
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label" for="regNombre">Nombre Completo</label>
+                    <div class="form-input-wrap">
+                        <i class="fa-solid fa-user form-input-icon"></i>
+                        <input type="text" id="regNombre" class="form-input" placeholder="Ej. Juan Pérez" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regTel">Teléfono / WhatsApp</label>
+                    <div class="form-input-wrap">
+                        <i class="fa-brands fa-whatsapp form-input-icon"></i>
+                        <input type="tel" id="regTel" class="form-input" placeholder="Ej. 7341234567" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regEmail">Correo Electrónico</label>
+                    <div class="form-input-wrap">
+                        <i class="fa-solid fa-envelope form-input-icon"></i>
+                        <input type="email" id="regEmail" class="form-input" placeholder="tu@correo.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regPassword">Contraseña</label>
+                    <div class="form-input-wrap">
+                        <i class="fa-solid fa-lock form-input-icon"></i>
+                        <input type="password" id="regPassword" class="form-input" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-auth" id="regSubmitBtn">
+                    <span>Registrarme Ahora</span>
+                    <i class="fa-solid fa-user-plus"></i>
+                </button>
+            </form>
+
+            <div style="text-align: center;">
+                <a href="index.html" class="back-to-store">
+                    <i class="fa-solid fa-arrow-left"></i> Volver al Catálogo de Productos
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuración de Supabase
+        const _dc = (c) => c.map(p => atob(p)).join('');
+        const SUPABASE_URL = _dc(["aHR0cHM6Ly8=","cWxpbmZnc3E=","cHp5aGlvcXk=","Z2V2di5zdXA=","YWJhc2UuY28="]);
+        const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=","VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=","bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=","Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=","M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=","M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=","bG44Q2Vhem00Z3BkSnhUMA=="]);
+        
+        let supabaseClient = null;
+        try {
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch(e) {
+            console.error("Supabase CDN error", e);
+        }
+
+        function switchAuthTab(tab) {
+            const loginBtn = document.getElementById('tabLoginBtn');
+            const regBtn = document.getElementById('tabRegisterBtn');
+            const loginForm = document.getElementById('loginForm');
+            const regForm = document.getElementById('registerForm');
+            const alertBox = document.getElementById('authAlert');
+
+            alertBox.className = 'auth-msg';
+            alertBox.style.display = 'none';
+
+            if (tab === 'login') {
+                loginBtn.classList.add('active');
+                regBtn.classList.remove('active');
+                loginForm.classList.add('active');
+                regForm.classList.remove('active');
+            } else {
+                regBtn.classList.add('active');
+                loginBtn.classList.remove('active');
+                regForm.classList.add('active');
+                loginForm.classList.remove('active');
+            }
+        }
+
+        function showAlert(message, isError = true) {
+            const alertBox = document.getElementById('authAlert');
+            alertBox.textContent = message;
+            alertBox.className = `auth-msg ${isError ? 'error' : 'success'}`;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginSubmitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Entrando...`;
+
+            if (supabaseClient) {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    showAlert(error.message || 'Error al iniciar sesión. Revisa tus credenciales.');
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Entrar a mi Cuenta</span> <i class="fa-solid fa-arrow-right"></i>`;
+                    return;
+                }
+
+                showAlert('¡Sesión iniciada con éxito! Redirigiendo a tu perfil...', false);
+                setTimeout(() => {
+                    window.location.href = 'perfil.html';
+                }, 1200);
+            } else {
+                showAlert('¡Bienvenido! (Modo demostración)', false);
+                setTimeout(() => {
+                    window.location.href = 'perfil.html';
+                }, 1200);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('regNombre').value.trim();
+            const telefono = document.getElementById('regTel').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const btn = document.getElementById('regSubmitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando...`;
+
+            if (supabaseClient) {
+                // 1. Crear usuario en Supabase Auth
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            nombre_completo: nombre,
+                            telefono: telefono
+                        }
+                    }
+                });
+
+                if (error) {
+                    let msg = error.message || 'Error al crear la cuenta.';
+                    if (error.code === 'email_provider_disabled' || msg.toLowerCase().includes('disabled')) {
+                        msg = 'El registro por correo está desactivado en Supabase. Ve a Authentication -> Sign In / Providers -> Email y actívalo (Enabled).';
+                    }
+                    showAlert(msg, true);
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
+                    return;
+                }
+
+                // 2. Insertar datos del cliente en la tabla 'clientes' (campos exactos: id, nombre_completo, telefono, email)
+                if (data.user) {
+                    const { error: dbError } = await supabaseClient.from('clientes').insert([
+                        {
+                            id: data.user.id,
+                            nombre_completo: nombre,
+                            telefono: telefono,
+                            email: email
+                        }
+                    ]);
+
+                    if (dbError) {
+                        console.error("Error al insertar en la tabla clientes:", dbError);
+                        showAlert(`Aviso al guardar cliente: ${dbError.message}`, true);
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
+                        return;
+                    }
+                }
+
+                showAlert('¡Registro exitoso! Tu cuenta ha sido creada.', false);
+                setTimeout(() => {
+                    window.location.href = 'perfil.html';
+                }, 1500);
+            } else {
+                showAlert('¡Registro exitoso! (Modo demostración)', false);
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -128,7 +128,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderNewProducts();
     filterCatalog();
     updateCartUI();
+    updateUserDropdownUI();
 });
+
+// Actualizar información del menú desplegable del usuario
+async function updateUserDropdownUI() {
+    const nameEl = document.getElementById('dropdownUserName');
+    const emailEl = document.getElementById('dropdownUserEmail');
+    const logoutBtn = document.getElementById('dropdownLogoutBtn');
+
+    if (supabaseClient) {
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && session.user) {
+                const user = session.user;
+                const fullName = user.user_metadata?.nombre_completo || 'Cliente';
+                const firstName = fullName.trim().split(' ')[0];
+                if (nameEl) nameEl.textContent = `Hola, ${firstName} 👋`;
+                if (emailEl) emailEl.textContent = user.email || 'Sesión Activa';
+                if (logoutBtn) logoutBtn.style.display = 'flex';
+                return;
+            }
+        } catch(e) {}
+    }
+
+    if (nameEl) nameEl.textContent = 'Mi Cuenta';
+    if (emailEl) emailEl.textContent = 'Iniciar Sesión / Registro';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+}
+
+window.handleGlobalLogout = async () => {
+    if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+    }
+    window.location.reload();
+};
 
 // ==========================================
 // PORTADAS / SLIDES DEL BANNER PRINCIPAL (HERO)
@@ -308,6 +342,21 @@ function resetHeroTimer() {
     startHeroTimer();
 }
 
+// Helper para desplazamiento suave sin que el header/buscador tape el contenido
+function scrollToWithHeaderOffset(elementOrId) {
+    const el = typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;
+    if (!el) return;
+    const header = document.getElementById('storeHeader');
+    const headerHeight = header ? header.offsetHeight : 140;
+    const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+    const offsetPosition = Math.max(0, elementPosition - headerHeight - 16);
+
+    window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+    });
+}
+
 // Acción al hacer clic en el botón de compra del slide
 window.handleHeroCTAClick = (categoria) => {
     if (categoria) {
@@ -315,7 +364,7 @@ window.handleHeroCTAClick = (categoria) => {
     }
     const catalogEl = document.getElementById('catalogGrid') || document.querySelector('main');
     if (catalogEl) {
-        catalogEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollToWithHeaderOffset(catalogEl);
     }
 };
 
@@ -349,54 +398,75 @@ function initSupabase() {
 
 // Cargar productos de base de datos o fallback
 async function fetchProducts() {
-    // Obtener id de comercio por URL opcional (ej: ?store=1)
     const urlParams = new URLSearchParams(window.location.search);
-    // Por defecto filtramos por el comercio 105 (PRUEBA SUPER BASE - Tienda de Ropa)
     const storeId = urlParams.get('store') || urlParams.get('comercio') || '105';
 
-    if (supabaseClient) {
-        try {
-            let query = supabaseClient.from('productos').select('*, variantes(*)');
-            if (storeId) {
-                query = query.eq('comercio_id', parseInt(storeId));
+    try {
+        let data = null;
+
+        // 1. Intentar por cliente oficial de Supabase
+        if (supabaseClient) {
+            try {
+                const { data: resData, error } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', parseInt(storeId));
+                if (!error && resData && resData.length > 0) {
+                    data = resData;
+                }
+            } catch (err) {
+                console.log("Consulta cliente Supabase aviso:", err);
             }
-            const { data, error } = await query;
-            
-            if (error) throw error;
-            
-            if (data && data.length > 0) {
-                allProducts = data.map(p => {
-                    const stockTotal = (p.variantes || []).reduce((sum, v) => sum + v.stock, 0);
-                    return {
-                        id: p.id,
-                        created_at: p.created_at,
-                        nombre: p.nombre,
-                        descripcion: p.descripcion || 'Sin descripción disponible.',
-                        precioVenta: p.precio_venta,
-                        categoria: p.categoria || 'GENERAL',
-                        stock: stockTotal,
-                        imagen_url: p.imagen_url || null,
-                        imagen_url_2: p.imagen_url_2 || null,
-                        imagen_url_3: p.imagen_url_3 || null,
-                        imagen_url_4: p.imagen_url_4 || null,
-                        variantes: p.variantes || []
-                    };
-                });
-                // FILTRADO GLOBAL DE AGOTADOS: Los artículos agotados no se muestran en el sitio web
-                allProducts = allProducts.filter(p => p.stock > 0);
-                console.log(`Cargados ${allProducts.length} productos reales desde Supabase.`);
-                // Se eliminó la notificación del catálogo en vivo por solicitud del usuario
-                return;
-            }
-        } catch (e) {
-            console.error("Error leyendo Supabase, usando respaldo:", e);
         }
+
+        // 2. Respaldo por REST directo si la consulta cliente no trajo datos
+        if (!data || data.length === 0) {
+            const restRes = await fetch(`${SUPABASE_URL}/rest/v1/productos?select=*,variantes(*)&comercio_id=eq.${storeId}`, {
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            if (restRes.ok) {
+                const restData = await restRes.json();
+                if (restData && restData.length > 0) {
+                    data = restData;
+                }
+            }
+        }
+
+        // 3. Procesar y mapear productos reales
+        if (data && data.length > 0) {
+            allProducts = data.map(p => {
+                const stockFromVar = (p.variantes || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+                const directStock = p.stock || 0;
+                // El stock total proviene de las variantes si las hay, o del stock directo
+                const stockTotal = (p.variantes && p.variantes.length > 0) ? stockFromVar : directStock;
+                
+                return {
+                    id: p.id,
+                    created_at: p.created_at || p.fecha_creacion || new Date().toISOString(),
+                    nombre: p.nombre,
+                    descripcion: p.descripcion || 'Sin descripción disponible.',
+                    precioVenta: p.precio_venta || p.precioVenta || 0,
+                    categoria: (p.categoria || 'GENERAL').toUpperCase(),
+                    stock: stockTotal,
+                    imagen_url: p.imagen_url || null,
+                    imagen_url_2: p.imagen_url_2 || null,
+                    imagen_url_3: p.imagen_url_3 || null,
+                    imagen_url_4: p.imagen_url_4 || null,
+                    variantes: p.variantes || []
+                };
+            });
+
+            // Filtrado de stock activo
+            allProducts = allProducts.filter(p => p.stock > 0);
+            console.log(`Cargados ${allProducts.length} productos reales desde Supabase.`);
+            return;
+        }
+    } catch (e) {
+        console.error("Error leyendo Supabase, usando respaldo:", e);
     }
-    
-    // Carga de respaldo (demostración)
-    allProducts = [...FALLBACK_PRODUCTS];
-    // FILTRADO GLOBAL DE AGOTADOS: Los artículos agotados no se muestran en el sitio web
-    allProducts = allProducts.filter(p => p.stock > 0);
+
+    // Carga de respaldo offline únicamente si falla la red
+    allProducts = [...FALLBACK_PRODUCTS].filter(p => p.stock > 0);
     console.log("Cargado catálogo de respaldo offline.");
 }
 
@@ -511,6 +581,7 @@ function setupEvents() {
             searchQuery = '';
             searchClearBtn.classList.remove('visible');
             filterCatalog();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             searchInput.focus();
         });
     }
@@ -527,11 +598,17 @@ function setupEvents() {
 
     const userBtn = document.getElementById('userBtn');
     if (userBtn) {
-        userBtn.addEventListener('click', () => {
-            const footer = document.getElementById('storeFooter');
-            if (footer) {
-                footer.scrollIntoView({ behavior: 'smooth' });
+        userBtn.addEventListener('click', async () => {
+            if (supabaseClient) {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session && session.user) {
+                        window.location.href = 'perfil.html';
+                        return;
+                    }
+                } catch(e) {}
             }
+            window.location.href = 'login.html';
         });
     }
 
@@ -555,9 +632,18 @@ function setupEvents() {
         });
     }
 
-    // Checkout / Envío a WhatsApp
+    // Checkout -> Redirección a la interfaz completa de Checkout (checkout.html)
     const checkoutBtn = document.getElementById('checkoutBtn');
-    if (checkoutBtn) checkoutBtn.addEventListener('click', processOrder);
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                showToast("Carrito Vacío", "Agrega al menos una prenda antes de proceder al pago.", "error");
+                return;
+            }
+            localStorage.setItem('imperial_cart', JSON.stringify(cart));
+            window.location.href = 'checkout.html';
+        });
+    }
 }
 
 // Renderizar dinámicamente las pestañas de categorías (Desktop y Móvil)
@@ -664,7 +750,14 @@ function filterCatalog() {
         filteredProducts = filteredProducts.filter(p => p.categoria.toUpperCase() === activeCategory);
     }
     
-    if (searchQuery) {
+    const heroSliderSection = document.getElementById('heroSliderSection');
+    const newProductsSection = document.getElementById('newProductsSection');
+
+    if (searchQuery && searchQuery.length > 0) {
+        // Al buscar: Ocultar el banner de portada y la sección de productos destacados
+        if (heroSliderSection) heroSliderSection.style.display = 'none';
+        if (newProductsSection) newProductsSection.style.display = 'none';
+
         filteredProducts = filteredProducts.filter(p => {
             const matchNombre = p.nombre && p.nombre.toLowerCase().includes(searchQuery);
             const matchDesc = p.descripcion && p.descripcion.toLowerCase().includes(searchQuery);
@@ -674,6 +767,16 @@ function filterCatalog() {
             );
             return matchNombre || matchDesc || matchVariante;
         });
+
+        // Subir automáticamente a los productos encontrados sin tapar con la barra
+        const catalogGrid = document.getElementById('catalogGrid') || document.querySelector('main');
+        if (catalogGrid) {
+            scrollToWithHeaderOffset(catalogGrid);
+        }
+    } else {
+        // Al limpiar la búsqueda: Volver a mostrar el banner de portada y productos destacados
+        if (heroSliderSection) heroSliderSection.style.display = 'block';
+        if (newProductsSection) newProductsSection.style.display = 'block';
     }
 
     // Actualizar indicador de productos encontrados
@@ -762,14 +865,11 @@ function renderNewProducts() {
     if (!grid) return;
     
     // Cambiado temporalmente a 365 días para forzar que se muestre algo
-    const tenDaysAgo = new Date();
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 365);
-    
-    const newProducts = allProducts.filter(p => {
-        if (!p.created_at) return false;
-        const createdAt = new Date(p.created_at);
-        return createdAt >= tenDaysAgo;
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8); // Mostrar máximo 8
+    const newProducts = [...allProducts].sort((a, b) => {
+        const dateA = new Date(a.created_at || a.fecha_creacion || 0);
+        const dateB = new Date(b.created_at || b.fecha_creacion || 0);
+        return dateB - dateA;
+    }).slice(0, 8); // Mostrar los 8 productos más recientes o destacados
     
     console.log("Nuevos productos encontrados:", newProducts.length);
     
@@ -1078,11 +1178,23 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const storeId = urlParams.get('store') || urlParams.get('comercio') || '105';
+
+            let userEmail = null;
+            let userId = null;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    userEmail = session.user.email;
+                    userId = session.user.id;
+                }
+            } catch(e) {}
             
             const { error } = await supabaseClient.from('pedidos_web').insert([{
                 cliente_nombre: clientName,
+                email: userEmail,
+                cliente_id: userId,
                 detalles_pedido: detalles_pedido,
-                total: total, // Usar total en vez de cartTotal
+                total: total,
                 estado: 'pendiente',
                 comercio_id: parseInt(storeId)
             }]);
