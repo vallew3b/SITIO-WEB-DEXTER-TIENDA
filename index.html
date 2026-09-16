@@ -22,7 +22,7 @@
         content="https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=800&auto=format&fit=crop">
 
     <!-- Stylesheets & Fonts -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=3.2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -33,7 +33,7 @@
          ================================================== -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
-            <img src="logo-imperial.png" alt="Imperial Design" class="splash-logo">
+            <img src="logo-imperial.png" alt="Imperial Design" class="splash-logo" style="max-width: 380px; width: 80vw; max-height: 220px; height: auto; object-fit: contain; filter: brightness(0) invert(1);">
             <div class="splash-loader-bar">
                 <div class="splash-loader-progress"></div>
             </div>
@@ -67,7 +67,7 @@
             <!-- Logo Imperial Design -->
             <div class="header-logo-wrap">
                 <a href="#" class="header-logo-link" id="storeLogo">
-                    <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img">
+                    <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img" style="height: 44px; max-height: 44px; width: auto; max-width: 170px; object-fit: contain; filter: brightness(0) invert(1); display: block;">
                 </a>
             </div>
 
@@ -129,7 +129,7 @@
     <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
     <aside class="mobile-drawer" id="mobileDrawer">
         <div class="mobile-drawer-header">
-            <img src="logo-imperial.png" alt="Imperial Design" class="drawer-logo-img">
+            <img src="logo-imperial.png" alt="Imperial Design" class="drawer-logo-img" style="height: 38px; max-height: 38px; width: auto; max-width: 140px; object-fit: contain; filter: brightness(0) invert(1); display: block;">
             <button class="drawer-close-btn" id="closeMobileDrawerBtn" aria-label="Cerrar Menú">
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -364,7 +364,7 @@
 
     <!-- Supabase JS Client & Store Logic -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="store.js"></script>
+    <script src="store.js?v=3.2"></script>
 </body>
 
 </html>
