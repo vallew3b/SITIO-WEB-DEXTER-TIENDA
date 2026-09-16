@@ -708,6 +708,109 @@
             }
         }
 
+        function getFavoritesKeyForUser() {
+            if (currentUser && currentUser.id) {
+                return `imperial_favs_${currentUser.id}`;
+            }
+            return 'imperial_favs_guest';
+        }
+
+        async function loadUserFavorites() {
+            const container = document.getElementById('favoritesListContainer');
+            if (!container) return;
+
+            const userKey = (currentUser && currentUser.id) ? `imperial_favs_${currentUser.id}` : 'imperial_favs_guest';
+            let favIds = [];
+            
+            try {
+                const userFavs = JSON.parse(localStorage.getItem(userKey)) || [];
+                const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
+                favIds = [...new Set([...userFavs, ...guestFavs])];
+                if (currentUser && currentUser.id && guestFavs.length > 0) {
+                    localStorage.setItem(userKey, JSON.stringify(favIds));
+                    localStorage.removeItem('imperial_favs_guest');
+                }
+            } catch(e) {}
+
+            if (!favIds || favIds.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                        <i class="fa-solid fa-heart-crack" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
+                        <p>Aún no tienes prendas guardadas en tus favoritos.</p>
+                        <a href="index.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
+                            Explorar Catálogo
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            const numericIds = favIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+
+            try {
+                let productsData = [];
+                if (supabaseClient && numericIds.length > 0) {
+                    const { data: res1 } = await supabaseClient.from('productos').select('*, variantes(*)').in('id', numericIds);
+                    if (res1 && res1.length > 0) {
+                        productsData = res1;
+                    } else {
+                        const { data: res2 } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', 105);
+                        if (res2 && res2.length > 0) {
+                            productsData = res2.filter(p => numericIds.includes(parseInt(p.id)));
+                        }
+                    }
+                }
+
+                if (productsData.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                            <i class="fa-solid fa-heart-crack" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
+                            <p>No se encontraron productos disponibles en el catálogo para tus favoritos guardados.</p>
+                            <a href="index.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
+                                Explorar Catálogo
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+                        ${productsData.map(p => `
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 16px; position: relative; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <img src="${p.imagen_url || 'logo-imperial.png'}" alt="${p.nombre}" style="width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.05);">
+                                    <div style="font-size: 11px; font-weight: 700; color: #c9a265; text-transform: uppercase;">${p.categoria || 'GENERAL'}</div>
+                                    <div style="font-size: 14px; font-weight: 800; color: #ffffff; margin: 4px 0 8px 0; line-height: 1.3;">${p.nombre}</div>
+                                    <div style="font-size: 16px; font-weight: 900; color: #ffffff;">$${(p.precio_venta || p.precioVenta || 0).toFixed(2)}</div>
+                                </div>
+                                <div style="display: flex; gap: 8px; margin-top: 14px;">
+                                    <a href="index.html" class="btn-submit-auth" style="padding: 8px 12px; font-size: 12px; flex: 1; text-decoration: none; text-align: center;">
+                                        <i class="fa-solid fa-cart-shopping"></i> Comprar
+                                    </a>
+                                    <button onclick="removeFavoriteFromProfile(${p.id})" style="padding: 8px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; cursor: pointer; transition: all 0.25s ease;">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+            } catch(e) {
+                console.error("Error al cargar favoritos:", e);
+            }
+        }
+
+        function removeFavoriteFromProfile(productId) {
+            const key = getFavoritesKeyForUser();
+            let favs = [];
+            try { favs = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
+            favs = favs.filter(id => id !== productId);
+            localStorage.setItem(key, JSON.stringify(favs));
+            loadUserFavorites();
+        }
+
         function switchProfileTab(tab) {
             document.querySelectorAll('.profile-menu-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
@@ -718,9 +821,11 @@
             } else if (tab === 'pedidos') {
                 document.getElementById('tabMenuPedidos').classList.add('active');
                 document.getElementById('tabContentPedidos').classList.add('active');
+                loadUserOrders();
             } else if (tab === 'favoritos') {
                 document.getElementById('tabMenuFavoritos').classList.add('active');
                 document.getElementById('tabContentFavoritos').classList.add('active');
+                loadUserFavorites();
             }
         }
 

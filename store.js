@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterCatalog();
     updateCartUI();
     updateUserDropdownUI();
+    updateFavoritesBadge();
 });
 
 // Actualizar información del menú desplegable del usuario
@@ -592,7 +593,7 @@ function setupEvents() {
     const wishlistBtn = document.getElementById('wishlistBtn');
     if (wishlistBtn) {
         wishlistBtn.addEventListener('click', () => {
-            showToast("✨ Guarda tus prendas favoritas agregándolas a tu carrito");
+            window.location.href = 'perfil.html?tab=favoritos';
         });
     }
 
@@ -795,9 +796,91 @@ function filterCatalog() {
     renderCatalog();
 }
 
+// ==================================================
+// GESTIÓN DE FAVORITOS (PERSISTENTE POR CUENTA)
+// ==================================================
+function getFavoritesStorageKey() {
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && (k.includes('auth-token') || k.includes('supabase.auth'))) {
+                const val = localStorage.getItem(k);
+                if (val && val.includes('"id"')) {
+                    const parsed = JSON.parse(val);
+                    const uid = parsed?.user?.id || parsed?.currentSession?.user?.id || parsed?.user?.email;
+                    if (uid) return `imperial_favs_${uid}`;
+                }
+            }
+        }
+    } catch(e) {}
+    return 'imperial_favs_guest';
+}
+
+function getFavorites() {
+    const key = getFavoritesStorageKey();
+    let userFavs = [];
+
+    try {
+        userFavs = JSON.parse(localStorage.getItem(key)) || [];
+    } catch(e) {}
+
+    // Si hay favoritos guardados en invitado y el usuario inició sesión, fusionar
+    if (key !== 'imperial_favs_guest') {
+        try {
+            const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
+            if (guestFavs.length > 0) {
+                userFavs = [...new Set([...userFavs, ...guestFavs])];
+                localStorage.setItem(key, JSON.stringify(userFavs));
+                localStorage.removeItem('imperial_favs_guest');
+            }
+        } catch(e) {}
+    }
+
+    return userFavs;
+}
+
+function saveFavorites(favs) {
+    const key = getFavoritesStorageKey();
+    localStorage.setItem(key, JSON.stringify(favs));
+    updateFavoritesBadge();
+}
+
+function isFavorite(productId) {
+    return getFavorites().includes(productId);
+}
+
+function toggleFavorite(event, productId) {
+    if (event) event.stopPropagation();
+    let favs = getFavorites();
+    const index = favs.indexOf(productId);
+
+    if (index > -1) {
+        favs.splice(index, 1);
+        showToast("Favoritos", "Producto eliminado de tus favoritos.", "info");
+    } else {
+        favs.push(productId);
+        showToast("Favoritos", "¡Producto guardado en tus favoritos! ❤️", "success");
+    }
+
+    saveFavorites(favs);
+    renderCatalog();
+    renderNewProducts();
+}
+
+function updateFavoritesBadge() {
+    const favs = getFavorites();
+    const badge = document.getElementById('wishlistCount');
+    if (badge) {
+        badge.textContent = favs.length;
+        badge.style.display = favs.length > 0 ? 'inline-flex' : 'none';
+    }
+}
+
 // Generar HTML de la tarjeta de producto
 function generateProductCardHTML(p) {
     const hasStock = p.stock > 0;
+    const isFav = isFavorite(p.id);
+
     const mainImg = p.imagen_url 
         ? `<img src="${p.imagen_url}" alt="${p.nombre}" class="product-image">`
         : `<div class="product-image-fallback"><i class="fa-solid fa-layer-group"></i></div>`;
@@ -805,6 +888,12 @@ function generateProductCardHTML(p) {
     const badge = hasStock 
         ? `<span class="product-badge badge-tag">${p.categoria}</span>`
         : `<span class="product-badge badge-out-of-stock">Agotado</span>`;
+
+    const favBtn = `
+        <button class="favorite-card-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, ${p.id})" title="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+            <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+        </button>
+    `;
 
     // Extraer tallas únicas de las variantes en stock
     const uniqueSizes = p.variantes && p.variantes.length > 0 
@@ -834,6 +923,7 @@ function generateProductCardHTML(p) {
         <div class="product-card">
             <div class="product-image-container product-clickable" onclick="openDetailModal(${p.id})">
                 ${badge}
+                ${favBtn}
                 ${mainImg}
             </div>
             <div class="product-info">
