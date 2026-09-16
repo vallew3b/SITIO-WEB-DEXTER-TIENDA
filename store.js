@@ -108,6 +108,9 @@ const FALLBACK_PRODUCTS = [
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Iniciar animación de Splash Screen (2 segundos de intro)
+    initSplashScreen();
+
     // 1. Inicializar Supabase si está disponible
     initSupabase();
     
@@ -123,6 +126,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterCatalog();
     updateCartUI();
 });
+
+// Splash Screen / Preloader intro timer
+function initSplashScreen() {
+    const splash = document.getElementById('splashScreen');
+    if (!splash) return;
+
+    // Mostrar durante 2 segundos (2000 ms) antes del fade-out
+    setTimeout(() => {
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 700);
+    }, 2000);
+}
 
 // Inicializar cliente Supabase
 function initSupabase() {
