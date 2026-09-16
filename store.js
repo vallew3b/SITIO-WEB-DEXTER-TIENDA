@@ -213,10 +213,12 @@ function setupEvents() {
     // Transición de barra superior al hacer scroll
     window.addEventListener('scroll', () => {
         const header = document.querySelector('header');
-        if (window.scrollY > 20) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+        if (header) {
+            if (window.scrollY > 20) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
         }
     });
 
@@ -236,55 +238,187 @@ function setupEvents() {
         cartDrawer.classList.remove('active');
     };
 
-    cartBtn.addEventListener('click', openCart);
-    closeCartBtn.addEventListener('click', closeCart);
-    cartOverlay.addEventListener('click', closeCart);
+    if (cartBtn) cartBtn.addEventListener('click', openCart);
+    if (closeCartBtn) closeCartBtn.addEventListener('click', closeCart);
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
 
-    // Búsqueda en catálogo
+    // ==========================================
+    // MENÚ LATERAL MÓVIL (DRAWER)
+    // ==========================================
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const closeMobileDrawerBtn = document.getElementById('closeMobileDrawerBtn');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+
+    const openMobileDrawer = () => {
+        if (mobileDrawer) mobileDrawer.classList.add('active');
+        if (mobileDrawerOverlay) mobileDrawerOverlay.classList.add('active');
+    };
+
+    const closeMobileDrawer = () => {
+        if (mobileDrawer) mobileDrawer.classList.remove('active');
+        if (mobileDrawerOverlay) mobileDrawerOverlay.classList.remove('active');
+    };
+
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMobileDrawer);
+    if (closeMobileDrawerBtn) closeMobileDrawerBtn.addEventListener('click', closeMobileDrawer);
+    if (mobileDrawerOverlay) mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
+
+    const drawerNovedadesLink = document.getElementById('drawerNovedadesLink');
+    if (drawerNovedadesLink) {
+        drawerNovedadesLink.addEventListener('click', () => {
+            closeMobileDrawer();
+        });
+    }
+
+    const drawerContactoLink = document.getElementById('drawerContactoLink');
+    if (drawerContactoLink) {
+        drawerContactoLink.addEventListener('click', () => {
+            closeMobileDrawer();
+        });
+    }
+
+    // ==========================================
+    // BUSCADOR FLOTANTE / EXPANDIBLE
+    // ==========================================
+    const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+    const desktopSearchBtn = document.getElementById('desktopSearchBtn');
+    const headerSearchBar = document.getElementById('headerSearchBar');
     const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value.toLowerCase().trim();
-        filterCatalog();
-    });
+    const searchClearBtn = document.getElementById('searchClearBtn');
+
+    const toggleSearchBar = () => {
+        if (headerSearchBar) {
+            headerSearchBar.classList.toggle('active');
+            if (headerSearchBar.classList.contains('active')) {
+                setTimeout(() => searchInput && searchInput.focus(), 150);
+            }
+        }
+    };
+
+    if (mobileSearchBtn) mobileSearchBtn.addEventListener('click', toggleSearchBar);
+    if (desktopSearchBtn) desktopSearchBtn.addEventListener('click', toggleSearchBar);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            if (searchClearBtn) {
+                if (searchQuery.length > 0) {
+                    searchClearBtn.classList.add('visible');
+                } else {
+                    searchClearBtn.classList.remove('visible');
+                }
+            }
+            filterCatalog();
+        });
+    }
+
+    if (searchClearBtn && searchInput) {
+        searchClearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            searchClearBtn.classList.remove('visible');
+            filterCatalog();
+            searchInput.focus();
+        });
+    }
+
+    // ==========================================
+    // BOTÓN DE FAVORITOS Y PERFIL/CONTACTO
+    // ==========================================
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    if (wishlistBtn) {
+        wishlistBtn.addEventListener('click', () => {
+            showToast("✨ Guarda tus prendas favoritas agregándolas a tu carrito");
+        });
+    }
+
+    const userBtn = document.getElementById('userBtn');
+    if (userBtn) {
+        userBtn.addEventListener('click', () => {
+            const footer = document.getElementById('storeFooter');
+            if (footer) {
+                footer.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
 
     // Cerrar Selector de Variantes Modal
-    document.getElementById('closeModalBtn').addEventListener('click', closeVariantModal);
-    document.getElementById('variantModalOverlay').addEventListener('click', (e) => {
-        if (e.target.id === 'variantModalOverlay') closeVariantModal();
-    });
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeVariantModal);
+    const variantModalOverlay = document.getElementById('variantModalOverlay');
+    if (variantModalOverlay) {
+        variantModalOverlay.addEventListener('click', (e) => {
+            if (e.target.id === 'variantModalOverlay') closeVariantModal();
+        });
+    }
 
     // Cerrar Modal de Detalles
-    document.getElementById('closeDetailModalBtn').addEventListener('click', closeDetailModal);
-    document.getElementById('detailModalOverlay').addEventListener('click', (e) => {
-        if (e.target.id === 'detailModalOverlay') closeDetailModal();
-    });
+    const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
+    if (closeDetailModalBtn) closeDetailModalBtn.addEventListener('click', closeDetailModal);
+    const detailModalOverlay = document.getElementById('detailModalOverlay');
+    if (detailModalOverlay) {
+        detailModalOverlay.addEventListener('click', (e) => {
+            if (e.target.id === 'detailModalOverlay') closeDetailModal();
+        });
+    }
 
     // Checkout / Envío a WhatsApp
-    document.getElementById('checkoutBtn').addEventListener('click', processOrder);
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    if (checkoutBtn) checkoutBtn.addEventListener('click', processOrder);
 }
 
-// Renderizar dinámicamente las pestañas de categorías
+// Renderizar dinámicamente las pestañas de categorías (Desktop y Móvil)
 function renderCategories() {
-    const container = document.getElementById('categoriesContainer');
-    if (!container) return;
+    const desktopContainer = document.getElementById('categoriesContainer');
+    const mobileContainer = document.getElementById('mobileCategoriesList');
 
     const categories = ['TODAS', ...new Set(allProducts.map(p => p.categoria.toUpperCase()))];
     
-    container.innerHTML = categories.map(cat => `
-        <button class="category-tab ${activeCategory === cat ? 'active' : ''}" data-category="${cat}">
-            ${cat}
-        </button>
-    `).join('');
-    
-    // Eventos de categorías
-    container.querySelectorAll('.category-tab').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            container.querySelectorAll('.category-tab').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            activeCategory = e.currentTarget.getAttribute('data-category');
-            filterCatalog();
+    // 1. Renderizar en Desktop (Barra central)
+    if (desktopContainer) {
+        desktopContainer.innerHTML = categories.map(cat => `
+            <button class="category-tab ${activeCategory === cat ? 'active' : ''}" data-category="${cat}">
+                ${cat}
+            </button>
+        `).join('');
+        
+        desktopContainer.querySelectorAll('.category-tab').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const selected = e.currentTarget.getAttribute('data-category');
+                selectCategory(selected);
+            });
         });
-    });
+    }
+
+    // 2. Renderizar en Mobile Drawer
+    if (mobileContainer) {
+        mobileContainer.innerHTML = categories.map(cat => `
+            <button class="mobile-drawer-cat-btn ${activeCategory === cat ? 'active' : ''}" data-category="${cat}">
+                <span>${cat}</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:11px; opacity:0.6;"></i>
+            </button>
+        `).join('');
+
+        mobileContainer.querySelectorAll('.mobile-drawer-cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const selected = e.currentTarget.getAttribute('data-category');
+                selectCategory(selected);
+                
+                // Cerrar drawer al elegir categoría
+                const mobileDrawer = document.getElementById('mobileDrawer');
+                const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+                if (mobileDrawer) mobileDrawer.classList.remove('active');
+                if (mobileDrawerOverlay) mobileDrawerOverlay.classList.remove('active');
+                
+                // Scroll suave al catálogo
+                const catalogHeader = document.getElementById('catalogHeaderBar');
+                if (catalogHeader) {
+                    catalogHeader.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    }
 
     // Evento para botón Specials / Novedades
     const specialsTab = document.getElementById('specialsTab');
@@ -297,6 +431,37 @@ function renderCategories() {
             }
         });
     }
+}
+
+// Función unificada para seleccionar categoría y sincronizar interfaces
+function selectCategory(categoryName) {
+    activeCategory = categoryName;
+
+    // Sincronizar desktop tabs
+    const desktopContainer = document.getElementById('categoriesContainer');
+    if (desktopContainer) {
+        desktopContainer.querySelectorAll('.category-tab').forEach(btn => {
+            if (btn.getAttribute('data-category') === categoryName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Sincronizar mobile tabs
+    const mobileContainer = document.getElementById('mobileCategoriesList');
+    if (mobileContainer) {
+        mobileContainer.querySelectorAll('.mobile-drawer-cat-btn').forEach(btn => {
+            if (btn.getAttribute('data-category') === categoryName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    filterCatalog();
 }
 
 // Filtrar catálogo por búsqueda y categoría

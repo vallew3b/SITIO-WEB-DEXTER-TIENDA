@@ -41,50 +41,121 @@
     </div>
 
     <!-- ==================================================
-         NAVBAR / HEADER (ESTILO B&H CON BARRA VERDE)
+         TOP ANNOUNCEMENT BAR (BARRA NEGRA SUPERIOR)
          ================================================== -->
-    <header id="storeHeader">
-        <div class="container navbar">
-            <a href="#" class="logo" id="storeLogo">
-                <i class="fa-solid fa-store" style="color: var(--primary);"></i>
-                <span>Imperial<span class="logo-italic">Design</span></span>
-            </a>
+    <div class="top-announcement-bar">
+        <div class="container top-announcement-content">
+            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el país</span>
+        </div>
+    </div>
 
-            <!-- Buscador Integrado en Header (Estilo B&H) -->
-            <div class="header-search">
-                <div class="search-box">
-                    <input type="text" id="searchInput" class="search-input"
-                        placeholder="🔍 ¿Qué estás buscando hoy? Escribe nombre o descripción...">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                </div>
-            </div>
-
-            <div class="nav-actions">
-                <button class="cart-trigger" id="cartBtn">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    <span class="cart-label">Ver Carrito</span>
-                    <span class="cart-count" id="cartTotalCount">0</span>
+    <!-- ==================================================
+         NAVBAR / HEADER PRINCIPAL (BARRA NEGRA CON LOGOS/ICONOS BLANCOS)
+         ================================================== -->
+    <header id="storeHeader" class="store-header">
+        <div class="container header-inner">
+            <!-- Móvil: Menú Hamburguesa & Buscar -->
+            <div class="header-left mobile-only">
+                <button class="header-icon-btn" id="mobileMenuBtn" aria-label="Abrir Menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <button class="header-icon-btn" id="mobileSearchBtn" aria-label="Buscar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </div>
-        </div>
 
-        <!-- BARRA VERDE DE CATEGORÍAS (ESTILO B&H) -->
-        <nav class="category-nav-bar" id="categoryNavBar">
-            <div class="container category-nav-container">
-                <div class="categories-container" id="categoriesContainer">
+            <!-- Logo Imperial Design -->
+            <div class="header-logo-wrap">
+                <a href="#" class="header-logo-link" id="storeLogo">
+                    <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img">
+                </a>
+            </div>
+
+            <!-- Desktop: Categorías en el centro (2 filas elegantes) -->
+            <nav class="desktop-nav-center desktop-only" id="desktopNavCenter">
+                <!-- Fila 1: Categorías principales -->
+                <div class="categories-row categories-container" id="categoriesContainer">
                     <button class="category-tab active" data-category="TODAS">TODAS</button>
                     <button class="category-tab" data-category="ROPA">ROPA</button>
                     <button class="category-tab" data-category="CALZADO">CALZADO</button>
                     <button class="category-tab" data-category="ACCESORIOS">ACCESORIOS</button>
                 </div>
-                <div class="category-nav-extra">
-                    <button class="category-tab special-tab" id="specialsTab">
-                        <i class="fa-solid fa-fire"></i> Novedades
+                <!-- Fila 2: Enlaces secundarios destacados -->
+                <div class="sub-nav-row">
+                    <button class="sub-nav-link special-tab" id="specialsTab">
+                        <i class="fa-solid fa-fire" style="color: #e63946;"></i> LO NUEVO
+                    </button>
+                    <a href="#newProductsSection" class="sub-nav-link">DESTACADOS</a>
+                    <a href="#storeFooter" class="sub-nav-link">CONTACTO</a>
+                </div>
+            </nav>
+
+            <!-- Acciones Derecha (Buscar en Desktop, Wishlist, Usuario, Carrito) -->
+            <div class="header-actions">
+                <button class="header-icon-btn desktop-only" id="desktopSearchBtn" aria-label="Buscar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button class="header-icon-btn" id="wishlistBtn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+                <button class="header-icon-btn" id="userBtn" aria-label="Mi Cuenta & Contacto" title="Contacto & Perfil">
+                    <i class="fa-regular fa-user"></i>
+                </button>
+                <button class="cart-trigger" id="cartBtn" aria-label="Ver Carrito">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count" id="cartTotalCount">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Buscador Desplegable Flotante -->
+        <div class="header-search-bar" id="headerSearchBar">
+            <div class="container search-bar-inner">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="🔍 ¿Qué estás buscando hoy? Escribe nombre o descripción...">
+                    <button class="search-clear-btn" id="searchClearBtn" aria-label="Limpiar búsqueda">
+                        <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
             </div>
-        </nav>
+        </div>
     </header>
+
+    <!-- ==================================================
+         MENÚ LATERAL MÓVIL (DRAWER)
+         ================================================== -->
+    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+    <aside class="mobile-drawer" id="mobileDrawer">
+        <div class="mobile-drawer-header">
+            <img src="logo-imperial.png" alt="Imperial Design" class="drawer-logo-img">
+            <button class="drawer-close-btn" id="closeMobileDrawerBtn" aria-label="Cerrar Menú">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="mobile-drawer-body">
+            <div class="drawer-section-title">CATEGORÍAS</div>
+            <div class="mobile-categories-list" id="mobileCategoriesList">
+                <!-- Inyectadas por store.js -->
+            </div>
+
+            <div class="drawer-divider"></div>
+
+            <div class="drawer-section-title">ACCESOS RÁPIDOS</div>
+            <div class="mobile-quick-links">
+                <a href="#newProductsSection" class="drawer-link" id="drawerNovedadesLink">
+                    <i class="fa-solid fa-fire" style="color: #e63946;"></i> Lo Nuevo & Destacados
+                </a>
+                <a href="#storeFooter" class="drawer-link" id="drawerContactoLink">
+                    <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> WhatsApp Directo
+                </a>
+                <a href="https://instagram.com/_imperial.design" target="_blank" class="drawer-link">
+                    <i class="fa-brands fa-instagram" style="color: #c9a265;"></i> @_imperial.design
+                </a>
+            </div>
+        </div>
+    </aside>
 
     <!-- ==================================================
          NUEVOS PRODUCTOS (DESTACADOS)
