@@ -111,21 +111,206 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 0. Iniciar animación de Splash Screen (2 segundos de intro)
     initSplashScreen();
 
-    // 1. Inicializar Supabase si está disponible
+    // 1. Inicializar Hero Slider (Portadas estilo New Era)
+    renderHeroSlider();
+
+    // 2. Inicializar Supabase si está disponible
     initSupabase();
     
-    // 2. Cargar productos
+    // 3. Cargar productos
     await fetchProducts();
     
-    // 3. Configurar Eventos UI
+    // 4. Configurar Eventos UI
     setupEvents();
     
-    // 4. Renderizar Interfaz
+    // 5. Renderizar Interfaz
     renderCategories();
     renderNewProducts();
     filterCatalog();
     updateCartUI();
 });
+
+// ==========================================
+// PORTADAS / SLIDES DEL BANNER PRINCIPAL (HERO)
+// ==========================================
+// Aquí puedes agregar tantas portadas como gustes. 'portada_playeras.jpg' es la primera.
+const HERO_SLIDES = [
+    {
+        id: 1,
+        imagen: "portada_playeras.jpg",
+        imagenFallback: "portada_playeras.jpg",
+        tag: "NUEVA COLECCIÓN",
+        titulo: "PLAYERAS IMPERIAL DESIGN",
+        descripcion: "Diseño urbano exclusivo, algodón premium y estampado de alta definición.",
+        botonTexto: "COMPRAR AHORA",
+        categoria: "ROPA"
+    },
+    {
+        id: 2,
+        imagen: "portada_sudaderas.jpg",
+        imagenFallback: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=1600&auto=format&fit=crop",
+        tag: "HOODIES & SWEATERS",
+        titulo: "SUDADERAS & OVERSHIRT",
+        descripcion: "Máxima presencia y comodidad con nuestro corte oversized de temporada.",
+        botonTexto: "VER SUDADERAS",
+        categoria: "ROPA"
+    },
+    {
+        id: 3,
+        imagen: "portada_gorras.jpg",
+        imagenFallback: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=1600&auto=format&fit=crop",
+        tag: "EDICIÓN LIMITADA",
+        titulo: "GORRAS & SNAPBACKS",
+        descripcion: "Bordados con relieve en hilo de oro y siluetas oficiales.",
+        botonTexto: "VER GORRAS",
+        categoria: "ACCESORIOS"
+    },
+    {
+        id: 4,
+        imagen: "portada_calzado.jpg",
+        imagenFallback: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1600&auto=format&fit=crop",
+        tag: "STREETWEAR SNEAKERS",
+        titulo: "CALZADO & TENIS",
+        descripcion: "Pisa fuerte con la selección de calzado urbano y sneakers exclusivos.",
+        botonTexto: "VER CALZADO",
+        categoria: "CALZADO"
+    }
+];
+
+let currentHeroSlide = 0;
+let heroSlideTimer = null;
+
+function renderHeroSlider() {
+    const wrapper = document.getElementById('heroSlidesWrapper');
+    const pagination = document.getElementById('sliderPagination');
+    const prevBtn = document.getElementById('sliderPrevBtn');
+    const nextBtn = document.getElementById('sliderNextBtn');
+    const sliderSection = document.getElementById('heroSlider');
+
+    if (!wrapper || !pagination) return;
+
+    // Renderizar Slides
+    wrapper.innerHTML = HERO_SLIDES.map((slide, i) => `
+        <div class="hero-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <img src="${slide.imagen}" 
+                 onerror="if('${slide.imagenFallback}' && this.src !== '${slide.imagenFallback}') this.src='${slide.imagenFallback}';" 
+                 alt="${slide.titulo}" 
+                 class="hero-slide-bg">
+            <div class="hero-slide-overlay"></div>
+            <div class="hero-slide-content">
+                <span class="hero-slide-tag">${slide.tag}</span>
+                <h1 class="hero-slide-title">${slide.titulo}</h1>
+                <p class="hero-slide-desc">${slide.descripcion}</p>
+                <button class="hero-slide-btn" onclick="handleHeroCTAClick('${slide.categoria}')">
+                    ${slide.botonTexto} <i class="fa-solid fa-arrow-right" style="margin-left:8px; font-size:12px;"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    // Renderizar Paginación (Puntos)
+    pagination.innerHTML = HERO_SLIDES.map((_, i) => `
+        <button class="slider-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Slide ${i+1}"></button>
+    `).join('');
+
+    // Eventos de Puntos
+    pagination.querySelectorAll('.slider-dot').forEach(dot => {
+        dot.addEventListener('click', (e) => {
+            const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+            goToHeroSlide(idx);
+            resetHeroTimer();
+        });
+    });
+
+    // Eventos Flechas
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            goToHeroSlide((currentHeroSlide - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+            resetHeroTimer();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            goToHeroSlide((currentHeroSlide + 1) % HERO_SLIDES.length);
+            resetHeroTimer();
+        });
+    }
+
+    // Touch Swipe en Móviles
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    if (sliderSection) {
+        sliderSection.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        sliderSection.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const threshold = 45;
+            if (touchStartX - touchEndX > threshold) {
+                // Swipe Izquierda -> Siguiente
+                goToHeroSlide((currentHeroSlide + 1) % HERO_SLIDES.length);
+                resetHeroTimer();
+            } else if (touchEndX - touchStartX > threshold) {
+                // Swipe Derecha -> Anterior
+                goToHeroSlide((currentHeroSlide - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+                resetHeroTimer();
+            }
+        }, { passive: true });
+
+        // Pausar en hover (desktop)
+        sliderSection.addEventListener('mouseenter', () => clearInterval(heroSlideTimer));
+        sliderSection.addEventListener('mouseleave', () => startHeroTimer());
+    }
+
+    // Iniciar temporizador automático (cada 5 segundos)
+    startHeroTimer();
+}
+
+function goToHeroSlide(index) {
+    currentHeroSlide = index;
+    const wrapper = document.getElementById('heroSlidesWrapper');
+    const dots = document.querySelectorAll('.slider-dot');
+    const slides = document.querySelectorAll('.hero-slide');
+
+    if (wrapper) {
+        wrapper.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
+    }
+
+    dots.forEach((d, i) => {
+        if (i === currentHeroSlide) d.classList.add('active');
+        else d.classList.remove('active');
+    });
+
+    slides.forEach((s, i) => {
+        if (i === currentHeroSlide) s.classList.add('active');
+        else s.classList.remove('active');
+    });
+}
+
+function startHeroTimer() {
+    clearInterval(heroSlideTimer);
+    heroSlideTimer = setInterval(() => {
+        goToHeroSlide((currentHeroSlide + 1) % HERO_SLIDES.length);
+    }, 5000);
+}
+
+function resetHeroTimer() {
+    startHeroTimer();
+}
+
+// Acción al hacer clic en el botón de compra del slide
+window.handleHeroCTAClick = (categoria) => {
+    if (categoria) {
+        selectCategory(categoria.toUpperCase());
+    }
+    const catalogEl = document.getElementById('catalogGrid') || document.querySelector('main');
+    if (catalogEl) {
+        catalogEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
 
 // Splash Screen / Preloader intro timer
 function initSplashScreen() {
