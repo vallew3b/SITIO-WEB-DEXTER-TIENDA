@@ -492,10 +492,10 @@
                     <form id="checkoutShippingForm">
                         <div class="address-form-grid">
                             <div class="form-group">
-                                <label class="form-label" for="chkNombre">Nombre Completo</label>
+                                <label class="form-label" for="chkNombre">Nombre y Apellido</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-user form-input-icon"></i>
-                                    <input type="text" id="chkNombre" class="form-input" placeholder="Tu Nombre Completo" required>
+                                    <input type="text" id="chkNombre" class="form-input" placeholder="Ej. Juan Pérez" required>
                                 </div>
                             </div>
 
@@ -524,10 +524,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="chkCP">Código Postal</label>
+                                <label class="form-label" for="chkCP">Código Postal (5 dígitos)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-map-pin form-input-icon"></i>
-                                    <input type="text" id="chkCP" class="form-input" placeholder="Ej. 62000" required>
+                                    <input type="tel" id="chkCP" class="form-input" placeholder="Ej. 62000" required maxlength="5" pattern="[0-9]{5}" inputmode="numeric">
                                 </div>
                                 <div id="shippingApiStatus" style="display:none; font-size:12px; color:rgba(255,255,255,0.75); margin-top:4px;"></div>
                             </div>
@@ -707,10 +707,24 @@
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             }
 
+            const nameInput = document.getElementById('chkNombre');
+            if (nameInput) {
+                nameInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                });
+            }
+
             const telInput = document.getElementById('chkTel');
             if (telInput) {
                 telInput.addEventListener('input', function () {
                     this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                });
+            }
+
+            const cpInput = document.getElementById('chkCP');
+            if (cpInput) {
+                cpInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 5);
                 });
             }
 
@@ -928,11 +942,20 @@
             const cleanTel = rawTel.replace(/\D/g, '');
             const direccion = document.getElementById('chkDireccion').value.trim();
             const ciudad = document.getElementById('chkCiudad').value.trim();
-            const cp = document.getElementById('chkCP').value.trim();
+            const rawCP = document.getElementById('chkCP').value.trim();
+            const cleanCP = rawCP.replace(/\D/g, '');
             const referencias = document.getElementById('chkReferencias').value.trim();
 
-            if (!nombre || !rawTel || !direccion || !ciudad || !cp) {
-                alert("Por favor completa los campos de domicilio de envío para continuar.");
+            if (!nombre || !rawTel || !direccion || !ciudad || !rawCP) {
+                alert("Por favor completa todos los campos de domicilio de envío para continuar.");
+                return;
+            }
+
+            const nameWords = nombre.split(/\s+/).filter(Boolean);
+            if (nameWords.length < 2) {
+                alert("Por favor ingresa tu Nombre y Apellido completo (Ejemplo: Juan Pérez).");
+                const nameIn = document.getElementById('chkNombre');
+                if (nameIn) nameIn.focus();
                 return;
             }
 
@@ -943,6 +966,14 @@
                 return;
             }
             const tel = cleanTel;
+
+            if (cleanCP.length !== 5) {
+                alert("El Código Postal es obligatorio y debe tener exactamente 5 dígitos numéricos (Ejemplo: 62000).");
+                const cpIn = document.getElementById('chkCP');
+                if (cpIn) cpIn.focus();
+                return;
+            }
+            const cp = cleanCP;
 
             const subtotal = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
             const grandTotal = subtotal + selectedShippingCost;

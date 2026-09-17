@@ -303,7 +303,7 @@
             <!-- Formulario 2: Registro -->
             <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
                 <div class="form-group">
-                    <label class="form-label" for="regNombre">Nombre Completo</label>
+                    <label class="form-label" for="regNombre">Nombre y Apellido</label>
                     <div class="form-input-wrap">
                         <i class="fa-solid fa-user form-input-icon"></i>
                         <input type="text" id="regNombre" class="form-input" placeholder="Ej. Juan Pérez" required>
@@ -427,10 +427,35 @@
             }
         }
 
+        document.addEventListener('DOMContentLoaded', () => {
+            const regNombreInput = document.getElementById('regNombre');
+            if (regNombreInput) {
+                regNombreInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                });
+            }
+
+            const regTelInput = document.getElementById('regTel');
+            if (regTelInput) {
+                regTelInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                });
+            }
+        });
+
         async function handleRegister(e) {
             e.preventDefault();
             const nombre = document.getElementById('regNombre').value.trim();
-            const telefono = document.getElementById('regTel').value.trim();
+            const nameWords = nombre.split(/\s+/).filter(Boolean);
+            if (nameWords.length < 2) {
+                showAlert('Por favor ingresa tu Nombre y Apellido completo (Ejemplo: Juan Pérez).', true);
+                document.getElementById('regNombre').focus();
+                return;
+            }
+
+            const rawTel = document.getElementById('regTel').value.trim();
+            const cleanTel = rawTel.replace(/\D/g, '');
+            const telefono = cleanTel;
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const btn = document.getElementById('regSubmitBtn');

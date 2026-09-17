@@ -589,10 +589,10 @@
                     <form id="profileForm" onsubmit="saveProfileData(event)">
                         <div class="address-form-grid">
                             <div class="form-group">
-                                <label class="form-label" for="profNombre">Nombre Completo</label>
+                                <label class="form-label" for="profNombre">Nombre y Apellido</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-user form-input-icon"></i>
-                                    <input type="text" id="profNombre" class="form-input" required placeholder="Tu Nombre">
+                                    <input type="text" id="profNombre" class="form-input" required placeholder="Ej. Juan Pérez">
                                 </div>
                             </div>
 
@@ -621,10 +621,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="profCP">Código Postal</label>
+                                <label class="form-label" for="profCP">Código Postal (5 dígitos)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-map-pin form-input-icon"></i>
-                                    <input type="text" id="profCP" class="form-input" placeholder="Ej. 62000">
+                                    <input type="tel" id="profCP" class="form-input" placeholder="Ej. 62000" maxlength="5" pattern="[0-9]{5}" inputmode="numeric">
                                 </div>
                             </div>
 
@@ -894,10 +894,24 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const profNombreInput = document.getElementById('profNombre');
+            if (profNombreInput) {
+                profNombreInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                });
+            }
+
             const profTelInput = document.getElementById('profTel');
             if (profTelInput) {
                 profTelInput.addEventListener('input', function () {
                     this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                });
+            }
+
+            const profCPInput = document.getElementById('profCP');
+            if (profCPInput) {
+                profCPInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 5);
                 });
             }
         });
@@ -905,11 +919,19 @@
         async function saveProfileData(e) {
             e.preventDefault();
             const profNombre = document.getElementById('profNombre').value.trim();
+            const nameWords = profNombre.split(/\s+/).filter(Boolean);
+            if (nameWords.length < 2) {
+                showProfileAlert('Por favor ingresa tu Nombre y Apellido completo (Ejemplo: Juan Pérez).', true);
+                document.getElementById('profNombre').focus();
+                return;
+            }
+
             const rawProfTel = document.getElementById('profTel').value.trim();
             const cleanProfTel = rawProfTel.replace(/\D/g, '');
             const profDireccion = document.getElementById('profDireccion').value.trim();
             const profCiudad = document.getElementById('profCiudad').value.trim();
-            const profCP = document.getElementById('profCP').value.trim();
+            const rawProfCP = document.getElementById('profCP').value.trim();
+            const cleanProfCP = rawProfCP.replace(/\D/g, '');
             const profReferencias = document.getElementById('profReferencias').value.trim();
 
             const alertBox = document.getElementById('profileAlert');
@@ -920,6 +942,13 @@
                 return;
             }
             const profTel = cleanProfTel;
+
+            if (cleanProfCP && cleanProfCP.length !== 5) {
+                showProfileAlert('El Código Postal debe ser de exactamente 5 dígitos numéricos (Ejemplo: 62000).', true);
+                document.getElementById('profCP').focus();
+                return;
+            }
+            const profCP = cleanProfCP;
 
             const btn = document.getElementById('btnSaveProfile');
             btn.disabled = true;
