@@ -6,8 +6,8 @@
 
 // Configuración protegida (ofuscada)
 const _dc = (c) => c.map(p => atob(p)).join('');
-const SUPABASE_URL = _dc(["aHR0cHM6Ly8=", "cWxpbmZnc3E=", "cHp5aGlvcXk=", "Z2V2di5zdXA=", "YWJhc2UuY28="]);
-const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=", "VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=", "bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=", "Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=", "M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=", "M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=", "bG44Q2Vhem00Z3BkSnhUMA=="]);
+const SUPABASE_URL = _dc(["aHR0cHM6Ly8=", "YWVqdGt5ZWVib3ZqZml1eG13a3M=", "LnN1cGFiYXNlLmNv"]);
+const SUPABASE_KEY = _dc(["c2JfcHVibGlzaGFibGVf", "U1c0MVJGckVubkY3TGNoYWtTZHlvQV9Od0ZYNy1Deg=="]);
 const WHATSAPP_PHONE = _dc(["NTI3MzQx", "NDM5Nzc5"]);
 
 let supabaseClient = null;
@@ -421,7 +421,7 @@ function initSupabase() {
 // Cargar productos de base de datos o fallback
 async function fetchProducts() {
     const urlParams = new URLSearchParams(window.location.search);
-    const storeId = urlParams.get('store') || urlParams.get('comercio') || '105';
+    const storeId = urlParams.get('store') || urlParams.get('comercio') || '111';
 
     try {
         let data = null;
@@ -1302,7 +1302,7 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
     if (supabaseClient) {
         try {
             const urlParams = new URLSearchParams(window.location.search);
-            const storeId = urlParams.get('store') || urlParams.get('comercio') || '105';
+            const storeId = urlParams.get('store') || urlParams.get('comercio') || '111';
 
             let userEmail = null;
             let userId = null;

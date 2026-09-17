@@ -685,8 +685,8 @@
     <script>
         // Supabase Client Setup
         const _dc = (c) => c.map(p => atob(p)).join('');
-        const SUPABASE_URL = _dc(["aHR0cHM6Ly8=","cWxpbmZnc3E=","cHp5aGlvcXk=","Z2V2di5zdXA=","YWJhc2UuY28="]);
-        const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=","VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=","bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=","Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=","M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=","M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=","bG44Q2Vhem00Z3BkSnhUMA=="]);
+        const SUPABASE_URL = _dc(["aHR0cHM6Ly8=", "YWVqdGt5ZWVib3ZqZml1eG13a3M=", "LnN1cGFiYXNlLmNv"]);
+        const SUPABASE_KEY = _dc(["c2JfcHVibGlzaGFibGVf", "U1c0MVJGckVubkY3TGNoYWtTZHlvQV9Od0ZYNy1Deg=="]);
         const WHATSAPP_PHONE = _dc(["NTI3MzQx","NDM5Nzc5"]);
         const MP_PUBLIC_KEY = "APP_USR-ee59339e-f6b7-4c8b-8dde-f4b60f8eecec";
         const MP_ACCESS_TOKEN = "APP_USR-8643422788805645-091620-8a48eef2330142addfa6976593a4775d-3272401105";
@@ -952,7 +952,7 @@
                                     email: user.email,
                                     nombre_completo: nombre,
                                     telefono: tel,
-                                    comercio_id: 105
+                                    comercio_id: 111
                                 }]);
                             } catch(e) {}
                         }
@@ -966,7 +966,7 @@
                         detalles_pedido: cartItems,
                         total: grandTotal,
                         estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
-                        comercio_id: 105
+                        comercio_id: 111
                     }]);
                     if (insertErr) console.log("Aviso al registrar pedido en Supabase:", insertErr);
                 } catch(e) {
