@@ -964,11 +964,32 @@
                     }
                 } catch(e) {}
 
-                // Registra pedido en tabla pedidos_web (Columnas compatibles con la tabla real)
+                // Registra pedido en tabla pedidos_web (Columnas compatibles con la tabla real y POS)
                 try {
+                    const formattedCartItems = cartItems.map(item => {
+                        const priceNum = Number(item.precioUnitario || item.precioVenta || item.precio || 0);
+                        return {
+                            ...item,
+                            precio: priceNum,
+                            precio_unitario: priceNum,
+                            precioVenta: priceNum,
+                            precioUnitario: priceNum
+                        };
+                    });
+
+                    let userEmailStr = '';
+                    try {
+                        const { data: { user } } = await supabaseClient.auth.getUser();
+                        if (user) userEmailStr = user.email || '';
+                    } catch(e) {}
+
                     const { error: insertErr } = await supabaseClient.from('pedidos_web').insert([{
                         cliente_nombre: nombre,
-                        detalles_pedido: cartItems,
+                        email: userEmailStr,
+                        telefono: tel,
+                        direccion_envio: `${direccion}, ${ciudad}, C.P. ${cp}${referencias ? ' (Ref: ' + referencias + ')' : ''}`,
+                        paqueteria: selectedShippingName || 'Correos de México',
+                        detalles_pedido: formattedCartItems,
                         total: grandTotal,
                         estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
                         comercio_id: 111
