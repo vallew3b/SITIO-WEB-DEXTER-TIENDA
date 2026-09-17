@@ -492,10 +492,18 @@
                     <form id="checkoutShippingForm">
                         <div class="address-form-grid">
                             <div class="form-group">
-                                <label class="form-label" for="chkNombre">Nombre y Apellido</label>
+                                <label class="form-label" for="chkNombre">Nombre(s)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-user form-input-icon"></i>
-                                    <input type="text" id="chkNombre" class="form-input" placeholder="Ej. Juan Pérez" required>
+                                    <input type="text" id="chkNombre" class="form-input" placeholder="Ej. Juan" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="chkApellido">Apellido(s)</label>
+                                <div class="form-input-wrap">
+                                    <i class="fa-solid fa-user-tag form-input-icon"></i>
+                                    <input type="text" id="chkApellido" class="form-input" placeholder="Ej. Pérez" required>
                                 </div>
                             </div>
 
@@ -714,6 +722,13 @@
                 });
             }
 
+            const surnameInput = document.getElementById('chkApellido');
+            if (surnameInput) {
+                surnameInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                });
+            }
+
             const telInput = document.getElementById('chkTel');
             if (telInput) {
                 telInput.addEventListener('input', function () {
@@ -905,7 +920,14 @@
                     const meta = user.user_metadata || {};
                     let hasSavedAddress = false;
 
-                    if (meta.nombre_completo) document.getElementById('chkNombre').value = meta.nombre_completo;
+                    if (meta.nombre || meta.apellido) {
+                        if (meta.nombre) document.getElementById('chkNombre').value = meta.nombre;
+                        if (meta.apellido) document.getElementById('chkApellido').value = meta.apellido;
+                    } else if (meta.nombre_completo) {
+                        const parts = meta.nombre_completo.split(' ');
+                        document.getElementById('chkNombre').value = parts[0] || '';
+                        document.getElementById('chkApellido').value = parts.slice(1).join(' ') || '';
+                    }
                     if (meta.telefono) document.getElementById('chkTel').value = meta.telefono;
                     if (meta.direccion) document.getElementById('chkDireccion').value = meta.direccion;
                     if (meta.ciudad) document.getElementById('chkCiudad').value = meta.ciudad;
@@ -937,7 +959,8 @@
         }
 
         async function processFinalCheckout() {
-            const nombre = document.getElementById('chkNombre').value.trim();
+            const nombreVal = document.getElementById('chkNombre').value.trim();
+            const apellidoVal = document.getElementById('chkApellido').value.trim();
             const rawTel = document.getElementById('chkTel').value.trim();
             const cleanTel = rawTel.replace(/\D/g, '');
             const direccion = document.getElementById('chkDireccion').value.trim();
@@ -946,18 +969,18 @@
             const cleanCP = rawCP.replace(/\D/g, '');
             const referencias = document.getElementById('chkReferencias').value.trim();
 
-            if (!nombre || !rawTel || !direccion || !ciudad || !rawCP) {
-                alert("Por favor completa todos los campos de domicilio de envío para continuar.");
+            if (!nombreVal) {
+                alert("El campo Nombre(s) es obligatorio.");
+                document.getElementById('chkNombre').focus();
+                return;
+            }
+            if (!apellidoVal) {
+                alert("El campo Apellido(s) es obligatorio.");
+                document.getElementById('chkApellido').focus();
                 return;
             }
 
-            const nameWords = nombre.split(/\s+/).filter(Boolean);
-            if (nameWords.length < 2) {
-                alert("Por favor ingresa tu Nombre y Apellido completo (Ejemplo: Juan Pérez).");
-                const nameIn = document.getElementById('chkNombre');
-                if (nameIn) nameIn.focus();
-                return;
-            }
+            const nombre = `${nombreVal} ${apellidoVal}`;
 
             if (cleanTel.length !== 10) {
                 alert("El número de teléfono / WhatsApp es obligatorio y debe contener exactamente 10 dígitos numéricos (Ejemplo: 7341439779).");
