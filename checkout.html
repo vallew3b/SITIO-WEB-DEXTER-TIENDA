@@ -500,10 +500,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="chkTel">Teléfono / WhatsApp</label>
+                                <label class="form-label" for="chkTel">Teléfono / WhatsApp (10 dígitos)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-brands fa-whatsapp form-input-icon"></i>
-                                    <input type="tel" id="chkTel" class="form-input" placeholder="Tu WhatsApp" required>
+                                    <input type="tel" id="chkTel" class="form-input" placeholder="Ej: 7341439779 (10 dígitos)" required maxlength="10" pattern="[0-9]{10}" inputmode="numeric">
                                 </div>
                             </div>
 
@@ -705,6 +705,13 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
+            const telInput = document.getElementById('chkTel');
+            if (telInput) {
+                telInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                });
             }
 
             // Cargar carrito guardado en localStorage
@@ -917,16 +924,25 @@
 
         async function processFinalCheckout() {
             const nombre = document.getElementById('chkNombre').value.trim();
-            const tel = document.getElementById('chkTel').value.trim();
+            const rawTel = document.getElementById('chkTel').value.trim();
+            const cleanTel = rawTel.replace(/\D/g, '');
             const direccion = document.getElementById('chkDireccion').value.trim();
             const ciudad = document.getElementById('chkCiudad').value.trim();
             const cp = document.getElementById('chkCP').value.trim();
             const referencias = document.getElementById('chkReferencias').value.trim();
 
-            if (!nombre || !tel || !direccion || !ciudad || !cp) {
+            if (!nombre || !rawTel || !direccion || !ciudad || !cp) {
                 alert("Por favor completa los campos de domicilio de envío para continuar.");
                 return;
             }
+
+            if (cleanTel.length !== 10) {
+                alert("El número de teléfono / WhatsApp es obligatorio y debe contener exactamente 10 dígitos numéricos (Ejemplo: 7341439779).");
+                const telInput = document.getElementById('chkTel');
+                if (telInput) telInput.focus();
+                return;
+            }
+            const tel = cleanTel;
 
             const subtotal = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
             const grandTotal = subtotal + selectedShippingCost;

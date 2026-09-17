@@ -597,10 +597,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="profTel">Teléfono / WhatsApp</label>
+                                <label class="form-label" for="profTel">Teléfono / WhatsApp (10 dígitos)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-brands fa-whatsapp form-input-icon"></i>
-                                    <input type="tel" id="profTel" class="form-input" required placeholder="Tu WhatsApp">
+                                    <input type="tel" id="profTel" class="form-input" required placeholder="Ej: 7341439779 (10 dígitos)" maxlength="10" pattern="[0-9]{10}" inputmode="numeric">
                                 </div>
                             </div>
 
@@ -893,20 +893,37 @@
             }
         }
 
+        document.addEventListener('DOMContentLoaded', () => {
+            const profTelInput = document.getElementById('profTel');
+            if (profTelInput) {
+                profTelInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                });
+            }
+        });
+
         async function saveProfileData(e) {
             e.preventDefault();
-            const btn = document.getElementById('btnSaveProfile');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando...`;
-
             const profNombre = document.getElementById('profNombre').value.trim();
-            const profTel = document.getElementById('profTel').value.trim();
+            const rawProfTel = document.getElementById('profTel').value.trim();
+            const cleanProfTel = rawProfTel.replace(/\D/g, '');
             const profDireccion = document.getElementById('profDireccion').value.trim();
             const profCiudad = document.getElementById('profCiudad').value.trim();
             const profCP = document.getElementById('profCP').value.trim();
             const profReferencias = document.getElementById('profReferencias').value.trim();
 
             const alertBox = document.getElementById('profileAlert');
+
+            if (cleanProfTel.length !== 10) {
+                showProfileAlert('El teléfono / WhatsApp es obligatorio y debe tener exactamente 10 dígitos numéricos (Ejemplo: 7341439779).', true);
+                document.getElementById('profTel').focus();
+                return;
+            }
+            const profTel = cleanProfTel;
+
+            const btn = document.getElementById('btnSaveProfile');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando...`;
 
             try {
                 // 1. Guardar todos los campos del domicilio en Supabase Auth user_metadata (nube sin restricción de esquema)

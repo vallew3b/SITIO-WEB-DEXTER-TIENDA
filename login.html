@@ -6,18 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Security Meta Tags (HTTP Headers fallback) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https: data:;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https: data:;">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
     <!-- SEO Meta Tags -->
     <title>Iniciar Sesión & Registro | Dexter Tienda - Imperial Design</title>
-    <meta name="description" content="Accede a tu cuenta o regístrate en Dexter Tienda para gestionar tus pedidos y guardar tus prendas favoritas.">
+    <meta name="description"
+        content="Accede a tu cuenta o regístrate en Dexter Tienda para gestionar tus pedidos y guardar tus prendas favoritas.">
 
     <!-- Stylesheets & Fonts -->
     <link rel="stylesheet" href="styles.css?v=5.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -115,8 +117,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-group {
@@ -234,7 +243,8 @@
     <!-- Top announcement bar -->
     <div class="top-announcement-bar">
         <div class="container top-announcement-content">
-            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el país</span>
+            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el
+                país</span>
         </div>
     </div>
 
@@ -257,8 +267,10 @@
 
             <!-- Tabs: Iniciar Sesión / Registro -->
             <div class="auth-tabs">
-                <button class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Iniciar Sesión</button>
-                <button class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Crear Cuenta</button>
+                <button class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Iniciar
+                    Sesión</button>
+                <button class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Crear
+                    Cuenta</button>
             </div>
 
             <!-- Alert messages -->
@@ -318,7 +330,8 @@
                     <label class="form-label" for="regPassword">Contraseña</label>
                     <div class="form-input-wrap">
                         <i class="fa-solid fa-lock form-input-icon"></i>
-                        <input type="password" id="regPassword" class="form-input" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                        <input type="password" id="regPassword" class="form-input" placeholder="Mínimo 6 caracteres"
+                            minlength="6" required>
                     </div>
                 </div>
 
@@ -341,13 +354,13 @@
         const _dc = (c) => c.map(p => atob(p)).join('');
         const SUPABASE_URL = _dc(["aHR0cHM6Ly8=", "YWVqdGt5ZWVib3ZqZml1eG13a3M=", "LnN1cGFiYXNlLmNv"]);
         const SUPABASE_KEY = _dc(["c2JfcHVibGlzaGFibGVf", "U1c0MVJGckVubkY3TGNoYWtTZHlvQV9Od0ZYNy1Deg=="]);
-        
+
         let supabaseClient = null;
         try {
             if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             }
-        } catch(e) {
+        } catch (e) {
             console.error("Supabase CDN error", e);
         }
 
