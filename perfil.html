@@ -1109,37 +1109,35 @@
                 const userFirstName = userFullName.split(' ')[0] || '';
                 const userEmail = (currentUser.email || '').trim().toLowerCase();
 
-                // Consultar primero desde la tabla dedicada pedidos_clientes_web
-                let { data, error } = await supabaseClient
-                    .from('pedidos_clientes_web')
-                    .select('*')
-                    .eq('comercio_id', 111)
-                    .order('id', { ascending: false });
+                // Consultar ambas tablas (pedidos_clientes_web y pedidos_web) para asegurar la carga completa
+                const [resClientes, resWeb] = await Promise.all([
+                    supabaseClient.from('pedidos_clientes_web').select('*').eq('comercio_id', 111).order('id', { ascending: false }),
+                    supabaseClient.from('pedidos_web').select('*').eq('comercio_id', 111).order('id', { ascending: false })
+                ]);
 
-                if (error || !data || data.length === 0) {
-                    // Respaldo desde pedidos_web si pedidos_clientes_web no tiene datos aún
-                    const res = await supabaseClient
-                        .from('pedidos_web')
-                        .select('*')
-                        .eq('comercio_id', 111)
-                        .order('id', { ascending: false });
-                    data = res.data || [];
-                }
+                const listClientes = resClientes.data || [];
+                const listWeb = resWeb.data || [];
+
+                // Combinar ambas listas
+                const allOrdersMap = new Map();
+                listWeb.forEach(p => { if (p.id) allOrdersMap.set(`web_${p.id}`, p); });
+                listClientes.forEach(p => { if (p.id) allOrdersMap.set(`cli_${p.id}`, p); });
+                const combinedData = Array.from(allOrdersMap.values());
 
                 // Filtrar en JavaScript los pedidos que pertenecen STRICTAMENTE a esta cuenta (por user_id o email exacto)
-                const userOrders = (data || []).filter(p => {
+                const userOrders = combinedData.filter(p => {
                     const pUserId = p.user_id || p.cliente_id;
                     const cEmail = (p.email || '').trim().toLowerCase();
 
                     // 1. Coincidencia por UUID de usuario Supabase
                     if (pUserId && currentUser.id && pUserId === currentUser.id) return true;
 
-                    // 2. Coincidencia por Email EXACTO (ej. ass@gmail.com === ass@gmail.com)
+                    // 2. Coincidencia por Email EXACTO (ej. prueba@gmail.com === prueba@gmail.com)
                     if (cEmail && userEmail && cEmail === userEmail) return true;
 
-                    // IMPORTANTE: Jamás coincidir por primer nombre parcial ("Jesus") para evitar cruzar pedidos
+                    // JAMÁS coincidir por primer nombre parcial ("Jesus") para evitar cruzar pedidos
                     return false;
-                });
+                }).sort((a, b) => (b.id || 0) - (a.id || 0));
 
                 currentLoadedOrders = userOrders;
 
