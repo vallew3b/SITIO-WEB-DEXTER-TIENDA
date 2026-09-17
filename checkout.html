@@ -959,6 +959,13 @@
         }
 
         async function processFinalCheckout() {
+            if (!supabaseClient && typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
+            const finalBtn = document.getElementById('btnFinalizeOrder');
+            const originalBtnHtml = finalBtn ? finalBtn.innerHTML : '';
+
             const nombreVal = document.getElementById('chkNombre').value.trim();
             const apellidoVal = document.getElementById('chkApellido').value.trim();
             const rawTel = document.getElementById('chkTel').value.trim();
@@ -1000,6 +1007,14 @@
 
             const subtotal = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
             const grandTotal = subtotal + selectedShippingCost;
+
+            if (finalBtn) {
+                finalBtn.disabled = true;
+                finalBtn.style.opacity = '0.7';
+                if (selectedPaymentType === 'whatsapp') {
+                    finalBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i> <span>Registrando pedido...</span>`;
+                }
+            }
 
             // 1. Guardar o actualizar datos de envío en perfil (nube) y clientes si está activada la opción
             if (supabaseClient) {
