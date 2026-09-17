@@ -1120,13 +1120,18 @@
                     console.log("Aviso al consultar pedidos_web:", error);
                 }
 
-                // Filtrar en JavaScript los pedidos que pertenecen a esta cuenta (por nombre o email)
+                // Filtrar en JavaScript los pedidos que pertenecen STRICTAMENTE a esta cuenta (por user_id o email exacto)
                 const userOrders = (data || []).filter(p => {
-                    const cName = (p.cliente_nombre || '').trim().toLowerCase();
+                    const pUserId = p.user_id || p.cliente_id;
                     const cEmail = (p.email || '').trim().toLowerCase();
+
+                    // 1. Coincidencia por UUID de usuario Supabase
+                    if (pUserId && currentUser.id && pUserId === currentUser.id) return true;
+
+                    // 2. Coincidencia por Email EXACTO (ej. ass@gmail.com === ass@gmail.com)
                     if (cEmail && userEmail && cEmail === userEmail) return true;
-                    if (cName && userFullName && (cName.includes(userFullName) || userFullName.includes(cName))) return true;
-                    if (cName && userFirstName && (cName.includes(userFirstName) || userFirstName.includes(cName))) return true;
+
+                    // IMPORTANTE: Jamás coincidir por primer nombre parcial ("Jesus") para evitar cruzar pedidos
                     return false;
                 });
 
@@ -1148,9 +1153,9 @@
                 container.innerHTML = userOrders.map(p => {
                     const st = (p.estado || 'pendiente').toLowerCase();
                     let stClass = 'status-pendiente';
-                    if (st.includes('anulado') || st.includes('cancelado')) stClass = 'status-anulado';
-                    else if (st.includes('enviado')) stClass = 'status-enviado';
-                    else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado')) stClass = 'status-completado';
+                    if (st.includes('anulado') || st.includes('cancelado') || st.includes('denegado') || st.includes('rechazado')) stClass = 'status-anulado';
+                    else if (st.includes('enviado') || st.includes('proceso') || st.includes('despachado')) stClass = 'status-enviado';
+                    else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado') || st.includes('confirmado') || st.includes('aprobado')) stClass = 'status-completado';
 
                     const dateStr = p.created_at ? new Date(p.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Reciente';
 
@@ -1263,9 +1268,9 @@
             const dateStr = order.created_at ? new Date(order.created_at).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' }) : 'Reciente';
             const st = (order.estado || 'pendiente').toLowerCase();
             let stClass = 'status-pendiente';
-            if (st.includes('anulado') || st.includes('cancelado')) stClass = 'status-anulado';
-            else if (st.includes('enviado')) stClass = 'status-enviado';
-            else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado')) stClass = 'status-completado';
+            if (st.includes('anulado') || st.includes('cancelado') || st.includes('denegado') || st.includes('rechazado')) stClass = 'status-anulado';
+            else if (st.includes('enviado') || st.includes('proceso') || st.includes('despachado')) stClass = 'status-enviado';
+            else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado') || st.includes('confirmado') || st.includes('aprobado')) stClass = 'status-completado';
 
             modalTitle.innerHTML = `Pedido #${order.id} <span class="order-status-badge ${stClass}" style="margin-left: 10px; vertical-align: middle;">${(order.estado || 'PENDIENTE').toUpperCase()}</span>`;
             modalDate.textContent = `Realizado el ${dateStr}`;

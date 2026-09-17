@@ -1048,17 +1048,23 @@
                     });
 
                     let userEmailStr = '';
+                    let currentUserId = null;
                     try {
                         const { data: { user } } = await supabaseClient.auth.getUser();
-                        if (user) userEmailStr = user.email || '';
+                        if (user) {
+                            userEmailStr = user.email || '';
+                            currentUserId = user.id || null;
+                        }
                     } catch(e) {}
 
                     const { error: insertErr } = await supabaseClient.from('pedidos_web').insert([{
                         cliente_nombre: nombre,
                         email: userEmailStr,
+                        user_id: currentUserId,
                         telefono: tel,
                         direccion_envio: `${direccion}, ${ciudad}, C.P. ${cp}${referencias ? ' (Ref: ' + referencias + ')' : ''}`,
-                        paqueteria: selectedShippingName || 'Correos de México',
+                        cp: cp,
+                        paqueteria: selectedShippingName || 'Estafeta Express',
                         detalles_pedido: formattedCartItems,
                         total: grandTotal,
                         estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
