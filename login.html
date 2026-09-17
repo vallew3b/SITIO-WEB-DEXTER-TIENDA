@@ -485,6 +485,22 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando...`;
 
             if (supabaseClient) {
+                // 0. Verificar si el correo ya existe en la tabla clientes
+                try {
+                    const { data: existingClient } = await supabaseClient
+                        .from('clientes')
+                        .select('id, email')
+                        .ilike('email', email)
+                        .maybeSingle();
+
+                    if (existingClient) {
+                        showAlert('⚠️ Este correo electrónico ya está registrado. Por favor, inicia sesión con tu cuenta o utiliza otro correo.', true);
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
+                        return;
+                    }
+                } catch(e) {}
+
                 // 1. Crear usuario en Supabase Auth
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
@@ -499,7 +515,10 @@
 
                 if (error) {
                     let msg = error.message || 'Error al crear la cuenta.';
-                    if (error.code === 'email_provider_disabled' || msg.toLowerCase().includes('disabled')) {
+                    const lowerMsg = msg.toLowerCase();
+                    if (error.code === 'user_already_exists' || lowerMsg.includes('already registered') || lowerMsg.includes('already in use') || lowerMsg.includes('already exists') || lowerMsg.includes('registrado')) {
+                        msg = '⚠️ Este correo electrónico ya tiene una cuenta registrada. Por favor, inicia sesión o utiliza otro correo.';
+                    } else if (error.code === 'email_provider_disabled' || lowerMsg.includes('disabled')) {
                         msg = 'El registro por correo está desactivado en Supabase. Ve a Authentication -> Sign In / Providers -> Email y actívalo (Enabled).';
                     }
                     showAlert(msg, true);
@@ -521,7 +540,13 @@
 
                     if (dbError) {
                         console.error("Error al insertar en la tabla clientes:", dbError);
-                        showAlert(`Aviso al guardar cliente: ${dbError.message}`, true);
+                        let dbMsg = dbError.message || '';
+                        if (dbError.code === '23505' || dbMsg.includes('unique') || dbMsg.includes('already exists') || dbMsg.includes('clientes_email_unique')) {
+                            dbMsg = '⚠️ Este correo electrónico ya está registrado en nuestro sistema. Por favor, inicia sesión con tu cuenta.';
+                        } else {
+                            dbMsg = `Aviso al guardar cliente: ${dbMsg}`;
+                        }
+                        showAlert(dbMsg, true);
                         btn.disabled = false;
                         btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
                         return;
