@@ -1057,30 +1057,33 @@
                         }
                     } catch(e) {}
 
-                    const orderPayload = {
+                    const pedidosWebPayload = {
                         cliente_nombre: nombre,
-                        email: userEmailStr,
-                        user_id: currentUserId,
-                        cliente_id: currentUserId,
+                        email: userEmailStr || null,
+                        user_id: currentUserId || null,
                         telefono: tel,
                         direccion_envio: `${direccion}, ${ciudad}, C.P. ${cp}${referencias ? ' (Ref: ' + referencias + ')' : ''}`,
                         cp: cp,
                         paqueteria: selectedShippingName || 'Estafeta Express',
                         detalles_pedido: formattedCartItems,
                         total: grandTotal,
-                        monto_total: grandTotal,
                         estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
                         comercio_id: 111
                     };
 
-                    // Insertar en tabla dedicada pedidos_clientes_web
-                    try {
-                        await supabaseClient.from('pedidos_clientes_web').insert([orderPayload]);
-                    } catch(e) {}
+                    // Insertar en tabla pedidos_web (leído por el Punto de Venta DEXTER / admimperial.lat)
+                    const { error: errWeb } = await supabaseClient.from('pedidos_web').insert([pedidosWebPayload]);
+                    if (errWeb) {
+                        console.error("Error al insertar en pedidos_web:", errWeb);
+                    }
 
-                    // Insertar en tabla pedidos_web por respaldo
+                    // Insertar en tabla dedicada pedidos_clientes_web por respaldo
                     try {
-                        await supabaseClient.from('pedidos_web').insert([orderPayload]);
+                        await supabaseClient.from('pedidos_clientes_web').insert([{
+                            ...pedidosWebPayload,
+                            cliente_id: currentUserId || null,
+                            monto_total: grandTotal
+                        }]);
                     } catch(e) {}
                 } catch(e) {
                     console.error("Error al registrar pedido:", e);
