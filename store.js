@@ -6,9 +6,9 @@
 
 // Configuración protegida (ofuscada)
 const _dc = (c) => c.map(p => atob(p)).join('');
-const SUPABASE_URL = _dc(["aHR0cHM6Ly8=","cWxpbmZnc3E=","cHp5aGlvcXk=","Z2V2di5zdXA=","YWJhc2UuY28="]);
-const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=","VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=","bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=","Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=","M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=","M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=","bG44Q2Vhem00Z3BkSnhUMA=="]);
-const WHATSAPP_PHONE = _dc(["NTI3MzQx","NDM5Nzc5"]);
+const SUPABASE_URL = _dc(["aHR0cHM6Ly8=", "cWxpbmZnc3E=", "cHp5aGlvcXk=", "Z2V2di5zdXA=", "YWJhc2UuY28="]);
+const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=", "VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=", "bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=", "Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=", "M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=", "M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=", "bG44Q2Vhem00Z3BkSnhUMA=="]);
+const WHATSAPP_PHONE = _dc(["NTI3MzQx", "NDM5Nzc5"]);
 
 let supabaseClient = null;
 let allProducts = [];
@@ -116,13 +116,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. Inicializar Supabase si está disponible
     initSupabase();
-    
+
     // 3. Cargar productos
     await fetchProducts();
-    
+
     // 4. Configurar Eventos UI
     setupEvents();
-    
+
     // 5. Renderizar Interfaz
     renderCategories();
     renderNewProducts();
@@ -132,36 +132,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateFavoritesBadge();
 });
 
-// Actualizar información del menú desplegable del usuario
+// Actualizar información del menú desplegable del usuario y sincronizar la nube en tiempo real
 async function updateUserDropdownUI() {
     const nameEl = document.getElementById('dropdownUserName');
     const emailEl = document.getElementById('dropdownUserEmail');
     const logoutBtn = document.getElementById('dropdownLogoutBtn');
 
-    if (supabaseClient) {
+    if (supabaseClient && supabaseClient.auth) {
         try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session && session.user) {
-                const user = session.user;
+            // Usar getUser() para consultar el servidor de Supabase en tiempo real (Celular / Laptop)
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
                 const fullName = user.user_metadata?.nombre_completo || 'Cliente';
                 const firstName = fullName.trim().split(' ')[0];
                 if (nameEl) nameEl.textContent = `Hola, ${firstName} 👋`;
                 if (emailEl) emailEl.textContent = user.email || 'Sesión Activa';
                 if (logoutBtn) logoutBtn.style.display = 'flex';
+
+                // Sincronizar Favoritos Nube <-> Local
+                const userKey = `imperial_favs_${user.id}`;
+                const cloudFavs = user.user_metadata?.favoritos || [];
+                let localFavs = [];
+                try { localFavs = JSON.parse(localStorage.getItem(userKey)) || []; } catch (e) { }
+                const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
+
+                const combinedFavs = [...new Set([...cloudFavs, ...localFavs, ...guestFavs])];
+                localStorage.setItem(userKey, JSON.stringify(combinedFavs));
+                if (guestFavs.length > 0) {
+                    localStorage.removeItem('imperial_favs_guest');
+                }
+
+                if (JSON.stringify(combinedFavs) !== JSON.stringify(cloudFavs)) {
+                    await supabaseClient.auth.updateUser({ data: { favoritos: combinedFavs } });
+                }
+
+                updateFavoritesBadge();
                 return;
             }
-        } catch(e) {}
+        } catch (e) { }
     }
 
     if (nameEl) nameEl.textContent = 'Mi Cuenta';
     if (emailEl) emailEl.textContent = 'Iniciar Sesión / Registro';
     if (logoutBtn) logoutBtn.style.display = 'none';
+    updateFavoritesBadge();
 }
 
 window.handleGlobalLogout = async () => {
     if (supabaseClient) {
         await supabaseClient.auth.signOut();
     }
+    localStorage.removeItem('imperial_favs_guest');
     window.location.reload();
 };
 
@@ -178,18 +199,18 @@ const HERO_SLIDES = [
         titulo: "PLAYERAS IMPERIAL DESIGN",
         descripcion: "Diseño urbano exclusivo, algodón premium y estampado de alta definición.",
         botonTexto: "COMPRAR AHORA",
-        categoria: "ROPA",
+        categoria: "PLAYERA",
         alineacion: "right" // Alineado a la derecha para dejar visible el estampado de la playera
     },
     {
         id: 2,
-        imagen: "portada_sudaderas.jpg",
-        imagenFallback: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=1600&auto=format&fit=crop",
+        imagen: "PORTADA_SUDADERA.jpg",
+        imagenFallback: "PORTADA_SUDADERA.jpg",
         tag: "HOODIES & SWEATERS",
         titulo: "SUDADERAS & OVERSHIRT",
         descripcion: "Máxima presencia y comodidad con nuestro corte oversized de temporada.",
         botonTexto: "VER SUDADERAS",
-        categoria: "ROPA",
+        categoria: "SUDADERAS",
         alineacion: "left"
     },
     {
@@ -200,18 +221,18 @@ const HERO_SLIDES = [
         titulo: "GORRAS & SNAPBACKS",
         descripcion: "Bordados con relieve en hilo de oro y siluetas oficiales.",
         botonTexto: "VER GORRAS",
-        categoria: "ACCESORIOS",
+        categoria: "GORRA",
         alineacion: "center"
     },
     {
         id: 4,
-        imagen: "portada_calzado.jpg",
-        imagenFallback: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1600&auto=format&fit=crop",
+        imagen: "PORTADA_SNKRS.jpg",
+        imagenFallback: "PORTADA_SNKRS.jpg",
         tag: "STREETWEAR SNEAKERS",
         titulo: "CALZADO & TENIS",
         descripcion: "Pisa fuerte con la selección de calzado urbano y sneakers exclusivos.",
         botonTexto: "VER CALZADO",
-        categoria: "CALZADO",
+        categoria: "SNKRS",
         alineacion: "right"
     }
 ];
@@ -252,7 +273,7 @@ function renderHeroSlider() {
 
     // Renderizar Paginación (Puntos)
     pagination.innerHTML = HERO_SLIDES.map((_, i) => `
-        <button class="slider-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Slide ${i+1}"></button>
+        <button class="slider-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Slide ${i + 1}"></button>
     `).join('');
 
     // Eventos de Puntos
@@ -363,9 +384,9 @@ window.handleHeroCTAClick = (categoria) => {
     if (categoria) {
         selectCategory(categoria.toUpperCase());
     }
-    const catalogEl = document.getElementById('catalogGrid') || document.querySelector('main');
-    if (catalogEl) {
-        scrollToWithHeaderOffset(catalogEl);
+    const catalogHeader = document.getElementById('catalogHeaderBar') || document.getElementById('catalogGrid') || document.querySelector('main');
+    if (catalogHeader) {
+        scrollToWithHeaderOffset(catalogHeader);
     }
 };
 
@@ -440,7 +461,7 @@ async function fetchProducts() {
                 const directStock = p.stock || 0;
                 // El stock total proviene de las variantes si las hay, o del stock directo
                 const stockTotal = (p.variantes && p.variantes.length > 0) ? stockFromVar : directStock;
-                
+
                 return {
                     id: p.id,
                     created_at: p.created_at || p.fecha_creacion || new Date().toISOString(),
@@ -607,7 +628,7 @@ function setupEvents() {
                         window.location.href = 'perfil.html';
                         return;
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
             window.location.href = 'login.html';
         });
@@ -652,8 +673,9 @@ function renderCategories() {
     const desktopContainer = document.getElementById('categoriesContainer');
     const mobileContainer = document.getElementById('mobileCategoriesList');
 
-    const categories = ['TODAS', ...new Set(allProducts.map(p => p.categoria.toUpperCase()))];
-    
+    const dbCategories = allProducts.map(p => (p.categoria || '').trim().toUpperCase()).filter(Boolean);
+    const categories = ['TODAS', ...new Set(dbCategories)];
+
     // 1. Renderizar en Desktop (Barra central)
     if (desktopContainer) {
         desktopContainer.innerHTML = categories.map(cat => `
@@ -661,7 +683,7 @@ function renderCategories() {
                 ${cat}
             </button>
         `).join('');
-        
+
         desktopContainer.querySelectorAll('.category-tab').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const selected = e.currentTarget.getAttribute('data-category');
@@ -683,13 +705,13 @@ function renderCategories() {
             btn.addEventListener('click', (e) => {
                 const selected = e.currentTarget.getAttribute('data-category');
                 selectCategory(selected);
-                
+
                 // Cerrar drawer al elegir categoría
                 const mobileDrawer = document.getElementById('mobileDrawer');
                 const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
                 if (mobileDrawer) mobileDrawer.classList.remove('active');
                 if (mobileDrawerOverlay) mobileDrawerOverlay.classList.remove('active');
-                
+
                 // Scroll suave al catálogo
                 const catalogHeader = document.getElementById('catalogHeaderBar');
                 if (catalogHeader) {
@@ -746,11 +768,29 @@ function selectCategory(categoryName) {
 // Filtrar catálogo por búsqueda y categoría
 function filterCatalog() {
     filteredProducts = allProducts;
-    
+
     if (activeCategory !== 'TODAS') {
-        filteredProducts = filteredProducts.filter(p => p.categoria.toUpperCase() === activeCategory);
+        filteredProducts = filteredProducts.filter(p => {
+            const cat = (p.categoria || '').toUpperCase();
+            if (cat === activeCategory) return true;
+
+            // Filtro dinámico si la categoría seleccionada es PLAYERAS o SUDADERAS
+            if (activeCategory === 'PLAYERAS' && (cat === 'ROPA' || cat === 'GENERAL')) {
+                const name = (p.nombre || '').toLowerCase();
+                const desc = (p.descripcion || '').toLowerCase();
+                return name.includes('playera') || name.includes('camiseta') || name.includes('t-shirt') || desc.includes('playera') || desc.includes('camiseta');
+            }
+
+            if (activeCategory === 'SUDADERAS' && (cat === 'ROPA' || cat === 'GENERAL')) {
+                const name = (p.nombre || '').toLowerCase();
+                const desc = (p.descripcion || '').toLowerCase();
+                return name.includes('sudadera') || name.includes('hoodie') || name.includes('overshirt') || desc.includes('sudadera') || desc.includes('hoodie');
+            }
+
+            return false;
+        });
     }
-    
+
     const heroSliderSection = document.getElementById('heroSliderSection');
     const newProductsSection = document.getElementById('newProductsSection');
 
@@ -762,7 +802,7 @@ function filterCatalog() {
         filteredProducts = filteredProducts.filter(p => {
             const matchNombre = p.nombre && p.nombre.toLowerCase().includes(searchQuery);
             const matchDesc = p.descripcion && p.descripcion.toLowerCase().includes(searchQuery);
-            const matchVariante = p.variantes && p.variantes.some(v => 
+            const matchVariante = p.variantes && p.variantes.some(v =>
                 (v.talla && v.talla.toLowerCase().includes(searchQuery)) ||
                 (v.color && v.color.toLowerCase().includes(searchQuery))
             );
@@ -792,7 +832,7 @@ function filterCatalog() {
             badge.textContent = `${count} producto${count !== 1 ? 's' : ''} disponible${count !== 1 ? 's' : ''}`;
         }
     }
-    
+
     renderCatalog();
 }
 
@@ -812,47 +852,42 @@ function getFavoritesStorageKey() {
                 }
             }
         }
-    } catch(e) {}
+    } catch (e) { }
     return 'imperial_favs_guest';
 }
 
 function getFavorites() {
     const key = getFavoritesStorageKey();
-    let userFavs = [];
-
     try {
-        userFavs = JSON.parse(localStorage.getItem(key)) || [];
-    } catch(e) {}
-
-    // Si hay favoritos guardados en invitado y el usuario inició sesión, fusionar
-    if (key !== 'imperial_favs_guest') {
-        try {
-            const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
-            if (guestFavs.length > 0) {
-                userFavs = [...new Set([...userFavs, ...guestFavs])];
-                localStorage.setItem(key, JSON.stringify(userFavs));
-                localStorage.removeItem('imperial_favs_guest');
-            }
-        } catch(e) {}
-    }
-
-    return userFavs;
+        return JSON.parse(localStorage.getItem(key)) || [];
+    } catch (e) { }
+    return [];
 }
 
-function saveFavorites(favs) {
+async function saveFavorites(favs) {
     const key = getFavoritesStorageKey();
     localStorage.setItem(key, JSON.stringify(favs));
     updateFavoritesBadge();
+
+    if (key !== 'imperial_favs_guest' && supabaseClient && supabaseClient.auth) {
+        try {
+            await supabaseClient.auth.updateUser({
+                data: { favoritos: favs }
+            });
+        } catch (e) {
+            console.log("Aviso guardando favoritos en Supabase:", e);
+        }
+    }
 }
 
 function isFavorite(productId) {
-    return getFavorites().includes(productId);
+    return getFavorites().some(fid => String(fid) === String(productId));
 }
 
 function toggleFavorite(event, productId) {
     if (event) event.stopPropagation();
     let favs = getFavorites();
-    const index = favs.indexOf(productId);
+    const index = favs.findIndex(fid => String(fid) === String(productId));
 
     if (index > -1) {
         favs.splice(index, 1);
@@ -881,11 +916,11 @@ function generateProductCardHTML(p) {
     const hasStock = p.stock > 0;
     const isFav = isFavorite(p.id);
 
-    const mainImg = p.imagen_url 
+    const mainImg = p.imagen_url
         ? `<img src="${p.imagen_url}" alt="${p.nombre}" class="product-image">`
         : `<div class="product-image-fallback"><i class="fa-solid fa-layer-group"></i></div>`;
-        
-    const badge = hasStock 
+
+    const badge = hasStock
         ? `<span class="product-badge badge-tag">${p.categoria}</span>`
         : `<span class="product-badge badge-out-of-stock">Agotado</span>`;
 
@@ -896,7 +931,7 @@ function generateProductCardHTML(p) {
     `;
 
     // Extraer tallas únicas de las variantes en stock
-    const uniqueSizes = p.variantes && p.variantes.length > 0 
+    const uniqueSizes = p.variantes && p.variantes.length > 0
         ? [...new Set(p.variantes.filter(v => v.stock > 0).map(v => v.talla).filter(Boolean))]
         : [];
 
@@ -907,13 +942,13 @@ function generateProductCardHTML(p) {
                 <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Tallas Disponibles:</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                     ${uniqueSizes.map(size => {
-                        const isActive = selectedCardSizes[p.id] === size;
-                        return `
+            const isActive = selectedCardSizes[p.id] === size;
+            return `
                             <button class="size-pill-btn ${isActive ? 'active' : ''}" onclick="selectCardSize(event, ${p.id}, '${size}')" data-product-id="${p.id}" data-size="${size}">
                                 ${size}
                             </button>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
@@ -953,32 +988,32 @@ function renderNewProducts() {
     const grid = document.getElementById('newProductsGrid');
     const section = document.getElementById('newProductsSection');
     if (!grid) return;
-    
+
     // Cambiado temporalmente a 365 días para forzar que se muestre algo
     const newProducts = [...allProducts].sort((a, b) => {
         const dateA = new Date(a.created_at || a.fecha_creacion || 0);
         const dateB = new Date(b.created_at || b.fecha_creacion || 0);
         return dateB - dateA;
     }).slice(0, 8); // Mostrar los 8 productos más recientes o destacados
-    
+
     console.log("Nuevos productos encontrados:", newProducts.length);
-    
+
     if (newProducts.length === 0) {
         if (section) section.style.display = 'none';
         return;
     }
-    
+
     if (section) section.style.display = 'block';
-    
+
     grid.innerHTML = newProducts.map(p => generateProductCardHTML(p)).join('');
 }
 
 // Renderizar cuadrícula del catálogo
 function renderCatalog() {
     const grid = document.getElementById('catalogGrid');
-    
+
     const targets = searchQuery || activeCategory !== 'TODAS' ? filteredProducts : allProducts;
-    
+
     if (targets.length === 0) {
         grid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
@@ -988,7 +1023,7 @@ function renderCatalog() {
         `;
         return;
     }
-    
+
     grid.innerHTML = targets.map(p => generateProductCardHTML(p)).join('');
 }
 
@@ -996,12 +1031,12 @@ function renderCatalog() {
 window.handleAddToCart = (productId) => {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
-    
+
     if (product.variantes && product.variantes.length > 0) {
         const selectedSize = selectedCardSizes[productId];
         if (!selectedSize) {
             showToast("Elige una talla", "Por favor, selecciona una talla antes de añadir al carrito.", "error");
-            
+
             // Animación de vibración en las píldoras de talla de este producto
             document.querySelectorAll(`.size-pill-btn[data-product-id="${productId}"]`).forEach(btn => {
                 btn.classList.add('shake-animation');
@@ -1009,7 +1044,7 @@ window.handleAddToCart = (productId) => {
             });
             return;
         }
-        
+
         // Buscar variante disponible que coincida con la talla seleccionada
         const matchedVariant = product.variantes.find(v => v.talla === selectedSize && v.stock > 0);
         if (matchedVariant) {
@@ -1026,14 +1061,14 @@ window.handleAddToCart = (productId) => {
 // Seleccionar talla desde la tarjeta de producto
 window.selectCardSize = (event, productId, size) => {
     event.stopPropagation(); // Prevenir que el clic en la talla abra el modal de detalles
-    
+
     selectedCardSizes[productId] = size;
-    
+
     // Desactivar otros botones de talla en esta tarjeta
     document.querySelectorAll(`.size-pill-btn[data-product-id="${productId}"]`).forEach(btn => {
         btn.classList.remove('active');
     });
-    
+
     // Activar el botón clicado
     event.target.classList.add('active');
 };
@@ -1043,11 +1078,11 @@ function openVariantModal(product) {
     const overlay = document.getElementById('variantModalOverlay');
     const title = document.getElementById('variantModalTitle');
     const tbody = document.getElementById('variantModalBody');
-    
+
     title.textContent = `Variantes de ${product.nombre}`;
-    
+
     const stockVariants = product.variantes.filter(v => v.stock > 0);
-    
+
     if (stockVariants.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">Sin unidades en stock</td></tr>';
     } else {
@@ -1064,7 +1099,7 @@ function openVariantModal(product) {
             </tr>
         `).join('');
     }
-    
+
     overlay.classList.add('active');
 }
 
@@ -1086,9 +1121,9 @@ window.addToCartFromModal = (productId, variantId) => {
 function addToCart(product, variant = null) {
     const variantKey = variant ? variant.id : 'default';
     const existingItem = cart.find(item => item.product_id === product.id && item.variant_id === variantKey);
-    
+
     const maxStock = variant ? variant.stock : product.stock;
-    
+
     if (existingItem) {
         if (existingItem.cantidad < maxStock) {
             existingItem.cantidad++;
@@ -1112,7 +1147,7 @@ function addToCart(product, variant = null) {
         });
         showToast("Carrito", `${product.nombre} se agregó a tus compras.`);
     }
-    
+
     updateCartUI();
 }
 
@@ -1120,7 +1155,7 @@ function addToCart(product, variant = null) {
 window.updateCartQty = (index, delta) => {
     const item = cart[index];
     const newQty = item.cantidad + delta;
-    
+
     if (newQty <= 0) {
         cart.splice(index, 1);
         showToast("Eliminado", `${item.nombre} eliminado del carrito.`);
@@ -1129,7 +1164,7 @@ window.updateCartQty = (index, delta) => {
     } else {
         item.cantidad = newQty;
     }
-    
+
     updateCartUI();
 };
 
@@ -1147,11 +1182,11 @@ function updateCartUI() {
     const totalCountEl = document.getElementById('cartTotalCount');
     const summarySubtotal = document.getElementById('summarySubtotal');
     const summaryTotal = document.getElementById('summaryTotal');
-    
+
     // Contador total del trigger
     const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
     totalCountEl.textContent = totalQty;
-    
+
     if (cart.length === 0) {
         cartList.innerHTML = `
             <div class="cart-empty-state">
@@ -1163,17 +1198,17 @@ function updateCartUI() {
         summaryTotal.textContent = "$0.00";
         return;
     }
-    
+
     let total = 0;
     cartList.innerHTML = cart.map((item, index) => {
         const itemTotal = item.cantidad * item.precioUnitario;
         total += itemTotal;
-        
+
         const imgHtml = item.imagen_url
             ? `<img src="${item.imagen_url}" alt="${item.nombre}" class="cart-item-image">`
             : `<div class="cart-item-image" style="display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.1);"><i class="fa-solid fa-image" style="color:var(--text-muted);"></i></div>`;
-            
-        const variantText = item.talla || item.color 
+
+        const variantText = item.talla || item.color
             ? `${item.talla ? 'Talla: ' + item.talla : ''} ${item.color ? '| Color: ' + item.color : ''}`
             : 'Estándar';
 
@@ -1199,7 +1234,7 @@ function updateCartUI() {
             </div>
         `;
     }).join('');
-    
+
     summarySubtotal.textContent = `$${total.toFixed(2)}`;
     summaryTotal.textContent = `$${total.toFixed(2)}`;
 }
@@ -1210,27 +1245,27 @@ async function processOrder() {
         showToast("Carrito vacío", "Añade productos antes de finalizar.", "error");
         return;
     }
-    
+
     // Preguntar nombre del cliente de manera interactiva
     const clientName = prompt("Ingresa tu nombre completo para el pedido:") || "Cliente Web";
-    
+
     let total = 0;
     let orderDetail = "";
-    
+
     cart.forEach(item => {
         const itemTotal = item.cantidad * item.precioUnitario;
         total += itemTotal;
-        
-        const variantText = item.talla || item.color 
+
+        const variantText = item.talla || item.color
             ? `(${item.talla ? 'Talla: ' + item.talla : ''} ${item.color ? '| Color: ' + item.color : ''})`
             : '';
-            
+
         orderDetail += `• *${item.cantidad}x ${item.nombre}* ${variantText} - _$${itemTotal.toFixed(2)}_\n`;
     });
-    
+
     // Compilar el mensaje de WhatsApp altamente premium
-    const message = 
-`*NUEVO PEDIDO DESDE DEXTER TIENDA* 🛒
+    const message =
+        `*NUEVO PEDIDO DESDE DEXTER TIENDA* 🛒
 ----------------------------------
 👤 *Cliente:* ${clientName}
 📅 *Fecha:* ${new Date().toLocaleDateString()}
@@ -1245,10 +1280,10 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
 
     const encodedMessage = encodeURIComponent(message);
     const waLink = `https://wa.me/${WHATSAPP_PHONE}?text=${encodedMessage}`;
-    
+
     // Abrir WhatsApp
     window.open(waLink, '_blank');
-    
+
     // Feedback visual y limpiar carrito
     showToast("Procesando...", "Registrando tu pedido...", "info");
 
@@ -1277,8 +1312,8 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
                     userEmail = session.user.email;
                     userId = session.user.id;
                 }
-            } catch(e) {}
-            
+            } catch (e) { }
+
             const { error } = await supabaseClient.from('pedidos_web').insert([{
                 cliente_nombre: clientName,
                 email: userEmail,
@@ -1288,7 +1323,7 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
                 estado: 'pendiente',
                 comercio_id: parseInt(storeId)
             }]);
-            
+
             if (error) {
                 console.error("Error guardando pedido en DB:", error);
             } else {
@@ -1300,10 +1335,10 @@ _Por favor, confírmame el stock disponible y los métodos de pago (transferenci
     }
 
     showToast("¡Pedido Enviado!", "Redireccionando a WhatsApp con el desglose de tu carrito...", "success");
-    
+
     cart = [];
     updateCartUI();
-    
+
     // Cerrar carrito
     document.getElementById('cartOverlay').classList.remove('active');
     document.getElementById('cartDrawer').classList.remove('active');
@@ -1318,11 +1353,11 @@ function showToast(title, message, type = 'success') {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-    
+
     toast.innerHTML = `
         <div class="toast-icon">${icon}</div>
         <div class="toast-content">
@@ -1331,9 +1366,9 @@ function showToast(title, message, type = 'success') {
         </div>
         <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
     `;
-    
+
     container.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.classList.add('hiding');
         setTimeout(() => toast.remove(), 300);
@@ -1348,21 +1383,21 @@ function showToast(title, message, type = 'success') {
 window.openDetailModal = (productId) => {
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
-    
+
     const overlay = document.getElementById('detailModalOverlay');
     document.getElementById('detailModalTitle').textContent = `Detalles de ${product.nombre}`;
     document.getElementById('detailProductName').textContent = product.nombre;
     document.getElementById('detailCategory').textContent = product.categoria;
     document.getElementById('detailProductPrice').textContent = `$${product.precioVenta.toFixed(2)}`;
     document.getElementById('detailDescription').textContent = product.descripcion;
-    
+
     // Cargar Imágenes en la Galería
     const mainImg = document.getElementById('detailMainImage');
     mainImg.src = product.imagen_url || 'https://via.placeholder.com/600';
-    
+
     const thumbsContainer = document.getElementById('detailThumbnails');
     const imagesArray = [product.imagen_url, product.imagen_url_2, product.imagen_url_3, product.imagen_url_4].filter(url => url);
-    
+
     if (imagesArray.length <= 1) {
         thumbsContainer.innerHTML = '';
         thumbsContainer.style.display = 'none';
@@ -1370,15 +1405,15 @@ window.openDetailModal = (productId) => {
         thumbsContainer.style.display = 'flex';
         thumbsContainer.innerHTML = imagesArray.map((url, i) => `
             <button class="thumbnail-btn ${i === 0 ? 'active' : ''}" onclick="changeDetailMainImage(this, '${url}')">
-                <img src="${url}" alt="Thumbnail ${i+1}" class="thumbnail-img">
+                <img src="${url}" alt="Thumbnail ${i + 1}" class="thumbnail-img">
             </button>
         `).join('');
     }
-    
+
     // Cargar Variantes en el Modal de Detalles
     const tbody = document.getElementById('detailVariantBody');
     const stockVariants = product.variantes.filter(v => v.stock > 0);
-    
+
     if (stockVariants.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">Sin stock disponible</td></tr>';
     } else {
@@ -1395,7 +1430,7 @@ window.openDetailModal = (productId) => {
             </tr>
         `).join('');
     }
-    
+
     overlay.classList.add('active');
 };
 

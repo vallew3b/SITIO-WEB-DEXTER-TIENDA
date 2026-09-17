@@ -17,6 +17,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        html, body {
+            overflow-x: clip !important;
+            overflow-y: visible !important;
+        }
+
         body {
             background-color: #000000;
             color: #ffffff;
@@ -27,6 +32,7 @@
         .profile-container {
             min-height: 85vh;
             padding: 50px 20px;
+            overflow: visible !important;
         }
 
         .profile-wrapper {
@@ -35,11 +41,17 @@
             display: grid;
             grid-template-columns: 290px 1fr;
             gap: 32px;
+            align-items: start !important;
+            overflow: visible !important;
         }
 
         @media (max-width: 880px) {
             .profile-wrapper {
                 grid-template-columns: 1fr;
+            }
+            .profile-sidebar {
+                position: relative !important;
+                top: 0 !important;
             }
         }
 
@@ -54,8 +66,10 @@
             gap: 22px;
             height: fit-content;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(201, 162, 101, 0.08);
-            position: relative;
-            overflow: hidden;
+            position: -webkit-sticky !important;
+            position: sticky !important;
+            top: 30px !important;
+            z-index: 100;
         }
 
         .profile-sidebar::before {
@@ -362,6 +376,124 @@
             color: #34d399;
             border: 1px solid rgba(16, 185, 129, 0.35);
         }
+
+        /* Botones y Modal de Rastreo & Detalles */
+        .btn-tracking-action {
+            padding: 7px 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-tracking-action:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+        .btn-tracking-action.gold {
+            background: rgba(201, 162, 101, 0.2);
+            border-color: #c9a265;
+            color: #ffffff;
+        }
+        .btn-tracking-action.gold:hover {
+            background: #c9a265;
+            color: #000000;
+        }
+        .btn-order-details {
+            padding: 9px 18px;
+            background: linear-gradient(135deg, rgba(201, 162, 101, 0.25), rgba(201, 162, 101, 0.1));
+            border: 1px solid #c9a265;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+        }
+        .btn-order-details:hover {
+            background: #c9a265;
+            color: #000000;
+            box-shadow: 0 4px 15px rgba(201, 162, 101, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Modal Detalles Pedido */
+        .order-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .order-modal-overlay.active {
+            display: flex;
+        }
+        .order-modal-card {
+            background: #141414;
+            border: 1px solid rgba(201, 162, 101, 0.35);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(201, 162, 101, 0.15);
+            overflow: hidden;
+            animation: modalSlideUp 0.3s ease-out;
+        }
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .order-modal-header {
+            padding: 18px 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .order-modal-close {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .order-modal-close:hover {
+            background: #e63946;
+            border-color: #e63946;
+            color: #ffffff;
+        }
+        .order-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -379,7 +511,7 @@
         <div class="container header-inner">
             <div class="header-logo-wrap">
                 <a href="index.html" class="header-logo-link">
-                    <img src="logo-imperial.png" alt="Imperial Design" class="header-logo-img" style="height: 44px;">
+                    <img src="logo-imperial.jpg" alt="Imperial Design" class="header-logo-img" style="height: 44px;">
                 </a>
             </div>
             <div style="margin-left: auto;">
@@ -482,9 +614,14 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-submit-auth" id="btnSaveProfile" style="margin-top: 26px;">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio
-                        </button>
+                        <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 26px;">
+                            <button type="submit" class="btn-submit-auth" id="btnSaveProfile">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio
+                            </button>
+                            <button type="button" class="btn-delete-address" id="btnDeleteAddress" onclick="deleteSavedAddress()" style="padding: 14px 24px; background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; font-size: 13.5px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; justify-content: center; gap: 10px;">
+                                <i class="fa-solid fa-trash-can"></i> Eliminar Domicilio Guardado
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -520,6 +657,22 @@
         </div>
     </main>
 
+    <!-- MODAL DETALLES DEL PEDIDO -->
+    <div id="orderDetailModalOverlay" class="order-modal-overlay" onclick="closeOrderDetailModal(event)">
+        <div class="order-modal-card" onclick="event.stopPropagation()">
+            <div class="order-modal-header">
+                <div>
+                    <h3 id="modalOrderTitle" style="margin: 0; font-size: 18px; color: #ffffff;">Detalles del Pedido</h3>
+                    <div id="modalOrderDate" style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px;"></div>
+                </div>
+                <button class="order-modal-close" onclick="closeOrderDetailModal()">&times;</button>
+            </div>
+            <div class="order-modal-body" id="modalOrderContent">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Supabase Client Setup
         const _dc = (c) => c.map(p => atob(p)).join('');
@@ -528,6 +681,64 @@
 
         let supabaseClient = null;
         let currentUser = null;
+        let currentLoadedOrders = [];
+
+        const FALLBACK_PRODUCTS = [
+            {
+                id: 9901,
+                nombre: "Chaqueta Bomber Terracota",
+                descripcion: "Chaqueta acolchada impermeable con detalles premium en color terracota de temporada. Forro interno térmico.",
+                precioVenta: 89.99,
+                categoria: "ROPA",
+                stock: 24,
+                imagen_url: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop"
+            },
+            {
+                id: 9902,
+                nombre: "Tenis Nike Air Max Retro",
+                descripcion: "Tenis de colección con suela amortiguadora de aire de alto confort y diseño vintage urbano premium.",
+                precioVenta: 139.99,
+                categoria: "CALZADO",
+                stock: 15,
+                imagen_url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop"
+            },
+            {
+                id: 9903,
+                nombre: "Gorra Mora Classic",
+                descripcion: "Gorra de béisbol con logo Mora bordado en relieve dorado. Ajustable y ultra resistente.",
+                precioVenta: 29.99,
+                categoria: "ACCESORIOS",
+                stock: 45,
+                imagen_url: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=600&auto=format&fit=crop"
+            },
+            {
+                id: 9904,
+                nombre: "Camiseta Algodón Orgánico",
+                descripcion: "Camiseta básica de algodón orgánico hilado en anillo de máxima frescura y tacto súper suave.",
+                precioVenta: 24.99,
+                categoria: "ROPA",
+                stock: 50,
+                imagen_url: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop"
+            },
+            {
+                id: 9905,
+                nombre: "Botas de Piel Clásicas",
+                descripcion: "Botas artesanales de piel genuina curtida al aceite con costuras reforzadas y suela todoterreno.",
+                precioVenta: 159.99,
+                categoria: "CALZADO",
+                stock: 12,
+                imagen_url: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?q=80&w=600&auto=format&fit=crop"
+            },
+            {
+                id: 9906,
+                nombre: "Reloj Minimalista Mora",
+                descripcion: "Reloj analógico de cuarzo con correa de cuero italiano y carátula minimalista negra en caja dorada.",
+                precioVenta: 99.99,
+                categoria: "ACCESORIOS",
+                stock: 8,
+                imagen_url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop"
+            }
+        ];
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof supabase !== 'undefined') {
@@ -550,16 +761,39 @@
                 return;
             }
 
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session || !session.user) {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            currentUser = session.user;
+            currentUser = user;
+
+            // Sincronización en tiempo real desde Supabase Cloud (Celular / Laptop)
+            try {
+                const cloudFavs = user.user_metadata?.favoritos || [];
+                const userKey = `imperial_favs_${user.id}`;
+                let localFavs = [];
+                try { localFavs = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
+                const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
+
+                const combinedFavs = [...new Set([...cloudFavs, ...localFavs, ...guestFavs])];
+                localStorage.setItem(userKey, JSON.stringify(combinedFavs));
+                if (guestFavs.length > 0) {
+                    localStorage.removeItem('imperial_favs_guest');
+                }
+
+                if (JSON.stringify(combinedFavs) !== JSON.stringify(cloudFavs)) {
+                    await supabaseClient.auth.updateUser({ data: { favoritos: combinedFavs } });
+                }
+            } catch(e) {
+                console.log("Aviso sincronizando favoritos en perfil:", e);
+            }
+
             renderUserHeaderInfo();
             await loadProfileData();
             await loadUserOrders();
+            await loadUserFavorites();
         }
 
         function renderUserHeaderInfo() {
@@ -581,19 +815,26 @@
 
         async function loadProfileData() {
             try {
-                const { data, error } = await supabaseClient
+                // 1. Cargar datos guardados en Auth user_metadata
+                const meta = currentUser.user_metadata || {};
+                if (meta.nombre_completo) document.getElementById('profNombre').value = meta.nombre_completo;
+                if (meta.telefono) document.getElementById('profTel').value = meta.telefono;
+                if (meta.direccion) document.getElementById('profDireccion').value = meta.direccion;
+                if (meta.ciudad) document.getElementById('profCiudad').value = meta.ciudad;
+                if (meta.cp) document.getElementById('profCP').value = meta.cp;
+                if (meta.referencias) document.getElementById('profReferencias').value = meta.referencias;
+
+                // 2. Intentar complementar desde la tabla 'clientes' si existen registros
+                const { data } = await supabaseClient
                     .from('clientes')
                     .select('*')
                     .eq('id', currentUser.id)
                     .maybeSingle();
 
                 if (data) {
-                    if (data.nombre_completo) document.getElementById('profNombre').value = data.nombre_completo;
-                    if (data.telefono) document.getElementById('profTel').value = data.telefono;
-                    if (data.direccion) document.getElementById('profDireccion').value = data.direccion;
-                    if (data.ciudad) document.getElementById('profCiudad').value = data.ciudad;
-                    if (data.cp) document.getElementById('profCP').value = data.cp;
-                    if (data.referencias) document.getElementById('profReferencias').value = data.referencias;
+                    if (data.nombre_completo && !document.getElementById('profNombre').value) document.getElementById('profNombre').value = data.nombre_completo;
+                    if (data.telefono && !document.getElementById('profTel').value) document.getElementById('profTel').value = data.telefono;
+                    if (data.direccion && !document.getElementById('profDireccion').value) document.getElementById('profDireccion').value = data.direccion;
                 }
             } catch (err) {
                 console.log("Aviso leyendo perfil:", err);
@@ -606,34 +847,122 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando...`;
 
-            const updatedData = {
-                id: currentUser.id,
-                email: currentUser.email,
-                nombre_completo: document.getElementById('profNombre').value.trim(),
-                telefono: document.getElementById('profTel').value.trim(),
-                direccion: document.getElementById('profDireccion').value.trim(),
-                ciudad: document.getElementById('profCiudad').value.trim(),
-                cp: document.getElementById('profCP').value.trim(),
-                referencias: document.getElementById('profReferencias').value.trim()
-            };
-
-            const { error } = await supabaseClient
-                .from('clientes')
-                .upsert([updatedData]);
-
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio`;
+            const profNombre = document.getElementById('profNombre').value.trim();
+            const profTel = document.getElementById('profTel').value.trim();
+            const profDireccion = document.getElementById('profDireccion').value.trim();
+            const profCiudad = document.getElementById('profCiudad').value.trim();
+            const profCP = document.getElementById('profCP').value.trim();
+            const profReferencias = document.getElementById('profReferencias').value.trim();
 
             const alertBox = document.getElementById('profileAlert');
-            if (error) {
-                alertBox.textContent = `Aviso al guardar domicilio: ${error.message}`;
-                alertBox.className = 'auth-msg error';
-                alertBox.style.display = 'block';
-            } else {
+
+            try {
+                // 1. Guardar todos los campos del domicilio en Supabase Auth user_metadata (nube sin restricción de esquema)
+                const { data, error: authErr } = await supabaseClient.auth.updateUser({
+                    data: {
+                        nombre_completo: profNombre,
+                        telefono: profTel,
+                        direccion: profDireccion,
+                        ciudad: profCiudad,
+                        cp: profCP,
+                        referencias: profReferencias
+                    }
+                });
+
+                if (authErr) throw authErr;
+
+                // Actualizar metadata del usuario local
+                if (data && data.user) {
+                    currentUser = data.user;
+                }
+
+                // 2. Guardar en la tabla 'clientes' los campos soportados (nombre, teléfono, email, comercio_id)
+                try {
+                    await supabaseClient.from('clientes').upsert([{
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        nombre_completo: profNombre,
+                        telefono: profTel,
+                        comercio_id: 105
+                    }]);
+                } catch(dbErr) {
+                    console.log("Aviso guardando en tabla clientes:", dbErr);
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio`;
+
                 alertBox.textContent = `¡Tus datos y domicilio de envío han sido guardados correctamente!`;
                 alertBox.className = 'auth-msg success';
                 alertBox.style.display = 'block';
                 setTimeout(() => alertBox.style.display = 'none', 3500);
+
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar Mi Domicilio`;
+                alertBox.textContent = `Aviso al guardar domicilio: ${err.message || err}`;
+                alertBox.className = 'auth-msg error';
+                alertBox.style.display = 'block';
+            }
+        }
+
+        async function deleteSavedAddress() {
+            if (!confirm("¿Estás seguro de que deseas eliminar tu domicilio guardado?")) {
+                return;
+            }
+
+            const btn = document.getElementById('btnDeleteAddress');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Eliminando...`;
+
+            // Limpiar los campos del formulario
+            document.getElementById('profDireccion').value = '';
+            document.getElementById('profCiudad').value = '';
+            document.getElementById('profCP').value = '';
+            document.getElementById('profReferencias').value = '';
+
+            const alertBox = document.getElementById('profileAlert');
+
+            try {
+                // 1. Borrar metadatos del domicilio en Auth user_metadata (nube)
+                const { data, error } = await supabaseClient.auth.updateUser({
+                    data: {
+                        direccion: '',
+                        ciudad: '',
+                        cp: '',
+                        referencias: ''
+                    }
+                });
+
+                if (error) throw error;
+
+                if (data && data.user) {
+                    currentUser = data.user;
+                }
+
+                // 2. Limpiar campo en la tabla 'clientes' por respaldo
+                try {
+                    await supabaseClient.from('clientes').upsert([{
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        direccion: null
+                    }]);
+                } catch(e) {}
+
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Eliminar Domicilio Guardado`;
+
+                alertBox.textContent = `¡Tu domicilio guardado ha sido eliminado de tu cuenta!`;
+                alertBox.className = 'auth-msg success';
+                alertBox.style.display = 'block';
+                setTimeout(() => alertBox.style.display = 'none', 3500);
+
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Eliminar Domicilio Guardado`;
+                alertBox.textContent = `Aviso al eliminar domicilio: ${err.message || err}`;
+                alertBox.className = 'auth-msg error';
+                alertBox.style.display = 'block';
             }
         }
 
@@ -667,6 +996,8 @@
                     return false;
                 });
 
+                currentLoadedOrders = userOrders;
+
                 if (userOrders.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
@@ -689,15 +1020,73 @@
 
                     const dateStr = p.created_at ? new Date(p.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Reciente';
 
+                    // Información de Número de Rastreo / Guía
+                    const trackingNum = p.numero_rastreo || p.guia || p.tracking_number || p.codigo_rastreo || p.no_guia || '';
+                    const carrier = p.paqueteria || p.carrier || p.empresa_envio || 'Correos de México';
+
+                    let carrierUrl = 'https://www.correosdemexico.gob.mx/SSLServicios/SeguimientoEnvio/Seguimiento.aspx';
+                    const carrierLower = carrier.toLowerCase();
+                    if (carrierLower.includes('estafeta')) {
+                        carrierUrl = 'https://www.estafeta.com/Rastreo/';
+                    } else if (carrierLower.includes('dhl')) {
+                        carrierUrl = trackingNum ? `https://www.dhl.com/es-mx/home/rastreo.html?tracking-id=${encodeURIComponent(trackingNum)}` : 'https://www.dhl.com/es-mx/home/rastreo.html';
+                    } else if (carrierLower.includes('fedex')) {
+                        carrierUrl = trackingNum ? `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(trackingNum)}` : 'https://www.fedex.com/fedextrack/';
+                    }
+
+                    let trackingHTML = '';
+                    if (trackingNum) {
+                        trackingHTML = `
+                            <div style="background: rgba(201, 162, 101, 0.08); border: 1px solid rgba(201, 162, 101, 0.25); border-radius: 12px; padding: 12px 14px; margin: 14px 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                    <div>
+                                        <span style="font-size: 11px; color: #c9a265; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block;">
+                                            <i class="fa-solid fa-truck-fast"></i> Número de Rastreo (${carrier})
+                                        </span>
+                                        <strong style="font-size: 14.5px; color: #ffffff; letter-spacing: 0.8px;">${trackingNum}</strong>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <button onclick="copyTrackingToClipboard('${trackingNum}')" class="btn-tracking-action" title="Copiar número de guía">
+                                            <i class="fa-regular fa-copy"></i> Copiar
+                                        </button>
+                                        <a href="${carrierUrl}" target="_blank" class="btn-tracking-action gold" title="Rastrear paquete en ${carrier}">
+                                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Rastrear Paquete
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        trackingHTML = `
+                            <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 14px; margin: 14px 0; font-size: 12.5px; color: rgba(255, 255, 255, 0.5); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-truck-ramp-box" style="color: rgba(255, 255, 255, 0.3);"></i>
+                                <span><strong>Número de Rastreo:</strong> Sin asignación aún.</span>
+                            </div>
+                        `;
+                    }
+
                     return `
                     <div class="order-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 20px; margin-bottom: 16px;">
                         <div class="order-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
-                            <span class="order-id" style="font-weight: 800; font-size: 15px; color: #ffffff;">Pedido #${p.id}</span>
+                            <div>
+                                <span class="order-id" style="font-weight: 800; font-size: 15.5px; color: #ffffff;">Pedido #${p.id}</span>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.5); margin-top:2px;">
+                                    <i class="fa-regular fa-clock" style="color:#c9a265; margin-right: 4px;"></i> ${dateStr}
+                                </div>
+                            </div>
                             <span class="order-status-badge ${stClass}">${(p.estado || 'PENDIENTE').toUpperCase()}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13.5px; color:rgba(255,255,255,0.85);">
-                            <span><i class="fa-regular fa-clock" style="color:#c9a265; margin-right: 6px;"></i> ${dateStr}</span>
-                            <strong style="font-size:17px; color:#c9a265;">$${(p.total || 0).toFixed(2)}</strong>
+
+                        ${trackingHTML}
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <span style="font-size: 12px; color: rgba(255,255,255,0.5); display: block;">Total del Pedido</span>
+                                <strong style="font-size:18px; color:#c9a265;">$${(p.total || 0).toFixed(2)}</strong>
+                            </div>
+                            <button onclick="openOrderDetailModal(${p.id})" class="btn-order-details">
+                                <i class="fa-solid fa-eye"></i> Ver Detalles del Pedido
+                            </button>
                         </div>
                     </div>
                     `;
@@ -708,29 +1097,226 @@
             }
         }
 
-        function getFavoritesKeyForUser() {
-            if (currentUser && currentUser.id) {
-                return `imperial_favs_${currentUser.id}`;
+        function copyTrackingToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("¡Número de rastreo copiado al portapapeles: " + text + "!");
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert("¡Número de rastreo copiado: " + text + "!");
+            });
+        }
+
+        function openOrderDetailModal(orderId) {
+            const order = currentLoadedOrders.find(o => String(o.id) === String(orderId));
+            if (!order) {
+                alert("No se pudo encontrar la información de este pedido.");
+                return;
             }
-            return 'imperial_favs_guest';
+
+            const modalOverlay = document.getElementById('orderDetailModalOverlay');
+            const modalTitle = document.getElementById('modalOrderTitle');
+            const modalDate = document.getElementById('modalOrderDate');
+            const modalContent = document.getElementById('modalOrderContent');
+
+            if (!modalOverlay || !modalContent) return;
+
+            const dateStr = order.created_at ? new Date(order.created_at).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' }) : 'Reciente';
+            const st = (order.estado || 'pendiente').toLowerCase();
+            let stClass = 'status-pendiente';
+            if (st.includes('anulado') || st.includes('cancelado')) stClass = 'status-anulado';
+            else if (st.includes('enviado')) stClass = 'status-enviado';
+            else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado')) stClass = 'status-completado';
+
+            modalTitle.innerHTML = `Pedido #${order.id} <span class="order-status-badge ${stClass}" style="margin-left: 10px; vertical-align: middle;">${(order.estado || 'PENDIENTE').toUpperCase()}</span>`;
+            modalDate.textContent = `Realizado el ${dateStr}`;
+
+            // Tracking Info
+            const trackingNum = order.numero_rastreo || order.guia || order.tracking_number || order.codigo_rastreo || order.no_guia || '';
+            const carrier = order.paqueteria || order.carrier || order.empresa_envio || 'Correos de México';
+
+            let carrierUrl = 'https://www.correosdemexico.gob.mx/SSLServicios/SeguimientoEnvio/Seguimiento.aspx';
+            const carrierLower = carrier.toLowerCase();
+            if (carrierLower.includes('estafeta')) {
+                carrierUrl = 'https://www.estafeta.com/Rastreo/';
+            } else if (carrierLower.includes('dhl')) {
+                carrierUrl = trackingNum ? `https://www.dhl.com/es-mx/home/rastreo.html?tracking-id=${encodeURIComponent(trackingNum)}` : 'https://www.dhl.com/es-mx/home/rastreo.html';
+            } else if (carrierLower.includes('fedex')) {
+                carrierUrl = trackingNum ? `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(trackingNum)}` : 'https://www.fedex.com/fedextrack/';
+            }
+
+            let trackingBanner = '';
+            if (trackingNum) {
+                trackingBanner = `
+                    <div style="background: rgba(201, 162, 101, 0.1); border: 1px solid rgba(201, 162, 101, 0.4); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <span style="font-size: 11px; color: #c9a265; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; display: block; margin-bottom: 4px;">
+                                    <i class="fa-solid fa-truck-fast"></i> Envío por ${carrier}
+                                </span>
+                                <div style="font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: 0.8px;">
+                                    Guía: <span style="color: #c9a265;">${trackingNum}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button onclick="copyTrackingToClipboard('${trackingNum}')" class="btn-tracking-action">
+                                    <i class="fa-regular fa-copy"></i> Copiar Guía
+                                </button>
+                                <a href="${carrierUrl}" target="_blank" class="btn-tracking-action gold">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Rastrear En ${carrier}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                trackingBanner = `
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: rgba(255, 255, 255, 0.6); display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-truck-ramp-box" style="font-size: 20px; color: #c9a265;"></i>
+                        <div>
+                            <strong style="color: #ffffff; display: block;">Número de Rastreo:</strong>
+                            <span>Sin asignación aún por el administrador. Se actualizará cuando tu pedido sea despachado.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Shipping Address Info
+            const shippingAddress = order.direccion_envio || order.direccion || order.domicilio || currentUser?.user_metadata?.direccion || 'No especificada';
+            const clientName = order.cliente_nombre || order.nombre || currentUser?.user_metadata?.nombre_completo || 'Cliente';
+            const clientPhone = order.telefono || order.tel || currentUser?.user_metadata?.telefono || 'No proporcionado';
+
+            const addressSection = `
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #c9a265; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-location-dot"></i> Domicilio de Destino
+                    </h4>
+                    <p style="margin: 0 0 4px 0; font-weight: 700; color: #ffffff; font-size: 14px;">${clientName}</p>
+                    <p style="margin: 0 0 4px 0; color: rgba(255, 255, 255, 0.8); font-size: 13px;"><i class="fa-solid fa-house" style="color: rgba(255,255,255,0.4); margin-right: 6px;"></i> ${shippingAddress}</p>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 12.5px;"><i class="fa-brands fa-whatsapp" style="color: #25D366; margin-right: 6px;"></i> ${clientPhone}</p>
+                </div>
+            `;
+
+            // Products List parsing
+            let items = [];
+            if (order.detalles_pedido) {
+                if (typeof order.detalles_pedido === 'string') {
+                    try {
+                        items = JSON.parse(order.detalles_pedido);
+                    } catch (e) {
+                        items = [{ nombre: order.detalles_pedido, cantidad: 1, precio: order.total }];
+                    }
+                } else if (Array.isArray(order.detalles_pedido)) {
+                    items = order.detalles_pedido;
+                }
+            } else if (order.items) {
+                items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+            } else if (order.productos) {
+                items = typeof order.productos === 'string' ? JSON.parse(order.productos) : order.productos;
+            }
+
+            let itemsHTML = '';
+            if (Array.isArray(items) && items.length > 0) {
+                itemsHTML = items.map(item => {
+                    const itemName = item.nombre || item.producto_nombre || item.titulo || item.product_name || 'Producto';
+                    const itemPrice = parseFloat(item.precio || item.precioVenta || item.price || 0);
+                    const itemQty = parseInt(item.cantidad || item.qty || item.quantity || 1);
+                    const itemImg = item.imagen || item.imagen_url || item.foto || item.image || 'https://via.placeholder.com/60';
+                    const itemTalla = item.talla || item.size || item.variante || '';
+
+                    return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); gap: 14px;">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <img src="${itemImg}" alt="${itemName}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);" onerror="this.src='https://via.placeholder.com/60'">
+                                <div>
+                                    <div style="font-weight: 700; color: #ffffff; font-size: 14px;">${itemName}</div>
+                                    ${itemTalla ? `<span style="font-size: 11px; background: rgba(201, 162, 101, 0.2); color: #c9a265; padding: 2px 8px; border-radius: 6px; font-weight: 700; display: inline-block; margin-top: 3px;">Talla: ${itemTalla}</span>` : ''}
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px;">Cantidad: ${itemQty} x $${itemPrice.toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 800; color: #c9a265; font-size: 15px;">
+                                $${(itemQty * itemPrice).toFixed(2)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                itemsHTML = `
+                    <div style="padding: 14px 0; color: rgba(255,255,255,0.7); font-size: 13px;">
+                        <i class="fa-solid fa-box" style="color: #c9a265; margin-right: 6px;"></i> Detalle de prendas o productos en este pedido.
+                    </div>
+                `;
+            }
+
+            const productsSection = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 13px; color: #c9a265; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-bag-shopping"></i> Productos Comprados
+                    </h4>
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 4px 16px;">
+                        ${itemsHTML}
+                    </div>
+                </div>
+            `;
+
+            // Totals Section
+            const totalsSection = `
+                <div style="background: rgba(201, 162, 101, 0.05); border: 1px solid rgba(201, 162, 101, 0.2); border-radius: 14px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.7);">
+                        <span>Método de Pago / Proceso</span>
+                        <span style="color: #ffffff; font-weight: 600;">${(order.metodo_pago || 'Pago en línea').toUpperCase()}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 16px;">
+                        <span style="font-weight: 700; color: #ffffff;">Total del Pedido</span>
+                        <strong style="font-size: 20px; color: #c9a265;">$${parseFloat(order.total || 0).toFixed(2)} MXN</strong>
+                    </div>
+                </div>
+            `;
+
+            modalContent.innerHTML = trackingBanner + addressSection + productsSection + totalsSection;
+            modalOverlay.classList.add('active');
+        }
+
+        function closeOrderDetailModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modalOverlay = document.getElementById('orderDetailModalOverlay');
+            if (modalOverlay) modalOverlay.classList.remove('active');
+        }
+
+
+
+        function getAllFavoritesFromStorage() {
+            let allFavs = [];
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('imperial_favs_')) {
+                        const item = JSON.parse(localStorage.getItem(k)) || [];
+                        if (Array.isArray(item)) {
+                            allFavs = [...allFavs, ...item];
+                        }
+                    }
+                }
+            } catch (e) { }
+            return [...new Set(allFavs)];
         }
 
         async function loadUserFavorites() {
             const container = document.getElementById('favoritesListContainer');
             if (!container) return;
 
-            const userKey = (currentUser && currentUser.id) ? `imperial_favs_${currentUser.id}` : 'imperial_favs_guest';
-            let favIds = [];
-            
-            try {
-                const userFavs = JSON.parse(localStorage.getItem(userKey)) || [];
-                const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
-                favIds = [...new Set([...userFavs, ...guestFavs])];
-                if (currentUser && currentUser.id && guestFavs.length > 0) {
-                    localStorage.setItem(userKey, JSON.stringify(favIds));
-                    localStorage.removeItem('imperial_favs_guest');
-                }
-            } catch(e) {}
+            const favIds = getAllFavoritesFromStorage();
+
+            if (currentUser && currentUser.id && favIds.length > 0) {
+                try {
+                    localStorage.setItem(`imperial_favs_${currentUser.id}`, JSON.stringify(favIds));
+                } catch(e) {}
+            }
 
             if (!favIds || favIds.length === 0) {
                 container.innerHTML = `
@@ -745,21 +1331,33 @@
                 return;
             }
 
-            const numericIds = favIds.map(id => parseInt(id)).filter(id => !isNaN(id));
-
             try {
-                let productsData = [];
-                if (supabaseClient && numericIds.length > 0) {
-                    const { data: res1 } = await supabaseClient.from('productos').select('*, variantes(*)').in('id', numericIds);
-                    if (res1 && res1.length > 0) {
-                        productsData = res1;
-                    } else {
-                        const { data: res2 } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', 105);
-                        if (res2 && res2.length > 0) {
-                            productsData = res2.filter(p => numericIds.includes(parseInt(p.id)));
+                let allCatalogProducts = [];
+
+                // 1. Obtener los productos reales de la tienda 105 desde Supabase
+                if (supabaseClient) {
+                    try {
+                        const { data, error } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', 105);
+                        if (data && data.length > 0) {
+                            allCatalogProducts = data;
                         }
+                    } catch (err) {
+                        console.log("Aviso leyendo catálogo para favoritos:", err);
                     }
                 }
+
+                // 2. Fusionar con productos de respaldo para asegurar compatibilidad total
+                const catalogIds = allCatalogProducts.map(p => String(p.id));
+                FALLBACK_PRODUCTS.forEach(fp => {
+                    if (!catalogIds.includes(String(fp.id))) {
+                        allCatalogProducts.push(fp);
+                    }
+                });
+
+                // 3. Filtrar favoritos comparando IDs de manera flexible (String match)
+                const productsData = allCatalogProducts.filter(p => 
+                    favIds.some(fid => String(fid) === String(p.id))
+                );
 
                 if (productsData.length === 0) {
                     container.innerHTML = `
@@ -779,7 +1377,7 @@
                         ${productsData.map(p => `
                             <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 16px; position: relative; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
-                                    <img src="${p.imagen_url || 'logo-imperial.png'}" alt="${p.nombre}" style="width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.05);">
+                                    <img src="${p.imagen_url || 'logo-imperial.jpg'}" alt="${p.nombre}" style="width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.05);">
                                     <div style="font-size: 11px; font-weight: 700; color: #c9a265; text-transform: uppercase;">${p.categoria || 'GENERAL'}</div>
                                     <div style="font-size: 14px; font-weight: 800; color: #ffffff; margin: 4px 0 8px 0; line-height: 1.3;">${p.nombre}</div>
                                     <div style="font-size: 16px; font-weight: 900; color: #ffffff;">$${(p.precio_venta || p.precioVenta || 0).toFixed(2)}</div>
@@ -788,7 +1386,7 @@
                                     <a href="index.html" class="btn-submit-auth" style="padding: 8px 12px; font-size: 12px; flex: 1; text-decoration: none; text-align: center;">
                                         <i class="fa-solid fa-cart-shopping"></i> Comprar
                                     </a>
-                                    <button onclick="removeFavoriteFromProfile(${p.id})" style="padding: 8px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; cursor: pointer; transition: all 0.25s ease;">
+                                    <button onclick="removeFavoriteFromProfile('${p.id}')" style="padding: 8px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; cursor: pointer; transition: all 0.25s ease;">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </div>
@@ -803,11 +1401,15 @@
         }
 
         function removeFavoriteFromProfile(productId) {
-            const key = getFavoritesKeyForUser();
+            const userKey = (currentUser && currentUser.id) ? `imperial_favs_${currentUser.id}` : 'imperial_favs_guest';
             let favs = [];
-            try { favs = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
-            favs = favs.filter(id => id !== productId);
-            localStorage.setItem(key, JSON.stringify(favs));
+            try { favs = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
+            favs = favs.filter(id => String(id) !== String(productId));
+            localStorage.setItem(userKey, JSON.stringify(favs));
+
+            if (currentUser && currentUser.id && supabaseClient && supabaseClient.auth) {
+                supabaseClient.auth.updateUser({ data: { favoritos: favs } }).catch(() => {});
+            }
             loadUserFavorites();
         }
 
@@ -833,6 +1435,7 @@
             if (supabaseClient) {
                 await supabaseClient.auth.signOut();
             }
+            localStorage.removeItem('imperial_favs_guest');
             window.location.href = 'index.html';
         }
     </script>

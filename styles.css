@@ -115,7 +115,8 @@
     height: auto !important;
     object-fit: contain !important;
     animation: logoBreathe 2s ease-in-out infinite alternate;
-    filter: brightness(0) invert(1) drop-shadow(0 0 25px rgba(255, 255, 255, 0.35)) !important;
+    mix-blend-mode: screen !important;
+    filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.35)) !important;
 }
 
 .splash-loader-bar {
@@ -309,7 +310,8 @@ main,
     width: auto !important;
     max-width: 170px !important;
     object-fit: contain !important;
-    filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.2)) !important;
+    mix-blend-mode: screen !important;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2)) !important;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
     display: block !important;
 }
@@ -711,7 +713,7 @@ main,
     width: auto !important;
     max-width: 140px !important;
     object-fit: contain !important;
-    filter: brightness(0) invert(1) !important;
+    mix-blend-mode: screen !important;
     display: block !important;
 }
 
