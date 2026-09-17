@@ -149,18 +149,15 @@ async function updateUserDropdownUI() {
                 if (emailEl) emailEl.textContent = user.email || 'Sesión Activa';
                 if (logoutBtn) logoutBtn.style.display = 'flex';
 
-                // Sincronizar Favoritos Nube <-> Local
+                // Sincronizar Favoritos Nube <-> Local por Usuario Autenticado
+                localStorage.removeItem('imperial_favs_guest');
                 const userKey = `imperial_favs_${user.id}`;
                 const cloudFavs = user.user_metadata?.favoritos || [];
                 let localFavs = [];
                 try { localFavs = JSON.parse(localStorage.getItem(userKey)) || []; } catch (e) { }
-                const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
 
-                const combinedFavs = [...new Set([...cloudFavs, ...localFavs, ...guestFavs])];
+                const combinedFavs = [...new Set([...cloudFavs, ...localFavs])];
                 localStorage.setItem(userKey, JSON.stringify(combinedFavs));
-                if (guestFavs.length > 0) {
-                    localStorage.removeItem('imperial_favs_guest');
-                }
 
                 if (JSON.stringify(combinedFavs) !== JSON.stringify(cloudFavs)) {
                     await supabaseClient.auth.updateUser({ data: { favoritos: combinedFavs } });

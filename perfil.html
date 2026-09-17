@@ -822,17 +822,14 @@
 
             // Sincronización en tiempo real desde Supabase Cloud (Celular / Laptop)
             try {
-                const cloudFavs = user.user_metadata?.favoritos || [];
+                localStorage.removeItem('imperial_favs_guest');
                 const userKey = `imperial_favs_${user.id}`;
+                const cloudFavs = user.user_metadata?.favoritos || [];
                 let localFavs = [];
                 try { localFavs = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
-                const guestFavs = JSON.parse(localStorage.getItem('imperial_favs_guest')) || [];
 
-                const combinedFavs = [...new Set([...cloudFavs, ...localFavs, ...guestFavs])];
+                const combinedFavs = [...new Set([...cloudFavs, ...localFavs])];
                 localStorage.setItem(userKey, JSON.stringify(combinedFavs));
-                if (guestFavs.length > 0) {
-                    localStorage.removeItem('imperial_favs_guest');
-                }
 
                 if (JSON.stringify(combinedFavs) !== JSON.stringify(cloudFavs)) {
                     await supabaseClient.auth.updateUser({ data: { favoritos: combinedFavs } });
@@ -1433,32 +1430,31 @@
 
 
 
-        function getAllFavoritesFromStorage() {
-            let allFavs = [];
-            try {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (k && k.startsWith('imperial_favs_')) {
-                        const item = JSON.parse(localStorage.getItem(k)) || [];
-                        if (Array.isArray(item)) {
-                            allFavs = [...allFavs, ...item];
-                        }
-                    }
-                }
-            } catch (e) { }
-            return [...new Set(allFavs)];
-        }
-
         async function loadUserFavorites() {
             const container = document.getElementById('favoritesListContainer');
             if (!container) return;
 
-            const favIds = getAllFavoritesFromStorage();
+            localStorage.removeItem('imperial_favs_guest');
 
-            if (currentUser && currentUser.id && favIds.length > 0) {
-                try {
-                    localStorage.setItem(`imperial_favs_${currentUser.id}`, JSON.stringify(favIds));
-                } catch(e) {}
+            if (!currentUser || !currentUser.id) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
+                        <i class="fa-solid fa-heart-crack" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
+                        <p>Inicia sesión para ver tus prendas favoritas.</p>
+                        <a href="login.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
+                            Iniciar Sesión
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            const userKey = `imperial_favs_${currentUser.id}`;
+            let favIds = [];
+            try { favIds = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
+            if ((!favIds || favIds.length === 0) && currentUser.user_metadata?.favoritos) {
+                favIds = currentUser.user_metadata.favoritos || [];
+                try { localStorage.setItem(userKey, JSON.stringify(favIds)); } catch(e) {}
             }
 
             if (!favIds || favIds.length === 0) {
@@ -1477,10 +1473,10 @@
             try {
                 let allCatalogProducts = [];
 
-                // 1. Obtener los productos reales de la tienda 105 desde Supabase
+                // 1. Obtener los productos reales desde Supabase
                 if (supabaseClient) {
                     try {
-                        const { data, error } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', 111);
+                        const { data } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', 111);
                         if (data && data.length > 0) {
                             allCatalogProducts = data;
                         }
@@ -1497,7 +1493,7 @@
                     }
                 });
 
-                // 3. Filtrar favoritos comparando IDs de manera flexible (String match)
+                // 3. Filtrar favoritos del usuario actual
                 const productsData = allCatalogProducts.filter(p => 
                     favIds.some(fid => String(fid) === String(p.id))
                 );
@@ -1530,7 +1526,7 @@
                                         <i class="fa-solid fa-cart-shopping"></i> Comprar
                                     </a>
                                     <button onclick="removeFavoriteFromProfile('${p.id}')" style="padding: 8px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; cursor: pointer; transition: all 0.25s ease;">
-                                        <i class="fa-solid fa-trash"></i>
+                                        <i class="fa-solid fa-trash"></i> Eliminar
                                     </button>
                                 </div>
                             </div>
@@ -1543,17 +1539,26 @@
             }
         }
 
-        function removeFavoriteFromProfile(productId) {
-            const userKey = (currentUser && currentUser.id) ? `imperial_favs_${currentUser.id}` : 'imperial_favs_guest';
+        async function removeFavoriteFromProfile(productId) {
+            if (!currentUser || !currentUser.id) return;
+            const userKey = `imperial_favs_${currentUser.id}`;
             let favs = [];
             try { favs = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
             favs = favs.filter(id => String(id) !== String(productId));
             localStorage.setItem(userKey, JSON.stringify(favs));
-
-            if (currentUser && currentUser.id && supabaseClient && supabaseClient.auth) {
-                supabaseClient.auth.updateUser({ data: { favoritos: favs } }).catch(() => {});
+            if (currentUser.user_metadata) {
+                currentUser.user_metadata.favoritos = favs;
             }
-            loadUserFavorites();
+
+            if (supabaseClient && supabaseClient.auth) {
+                try {
+                    await supabaseClient.auth.updateUser({ data: { favoritos: favs } });
+                } catch(e) {}
+            }
+            if (typeof updateFavoritesBadge === 'function') {
+                updateFavoritesBadge();
+            }
+            await loadUserFavorites();
         }
 
         function switchProfileTab(tab) {
