@@ -397,12 +397,22 @@
 
         function showAlert(message, isError = true) {
             const alertBox = document.getElementById('authAlert');
-            alertBox.textContent = message;
-            alertBox.className = `auth-msg ${isError ? 'error' : 'success'}`;
+            if (alertBox) {
+                alertBox.textContent = message;
+                alertBox.className = `auth-msg ${isError ? 'error' : 'success'}`;
+                alertBox.style.display = 'block';
+                try {
+                    alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } catch(e) {}
+            }
         }
 
         async function handleLogin(e) {
             e.preventDefault();
+            if (!supabaseClient && typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const btn = document.getElementById('loginSubmitBtn');
@@ -417,7 +427,11 @@
                 });
 
                 if (error) {
-                    showAlert(error.message || 'Error al iniciar sesión. Revisa tus credenciales.');
+                    let msg = error.message || 'Error al iniciar sesión. Revisa tus credenciales.';
+                    if (msg.includes('Invalid login credentials')) {
+                        msg = '⚠️ Correo electrónico o contraseña incorrectos. Por favor, verifica tus datos.';
+                    }
+                    showAlert(msg, true);
                     btn.disabled = false;
                     btn.innerHTML = `<span>Entrar a mi Cuenta</span> <i class="fa-solid fa-arrow-right"></i>`;
                     return;
@@ -460,6 +474,10 @@
 
         async function handleRegister(e) {
             e.preventDefault();
+            if (!supabaseClient && typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
             const nomVal = document.getElementById('regNombre').value.trim();
             const apeVal = document.getElementById('regApellido').value.trim();
             if (!nomVal) {
@@ -476,6 +494,12 @@
 
             const rawTel = document.getElementById('regTel').value.trim();
             const cleanTel = rawTel.replace(/\D/g, '');
+            if (cleanTel.length !== 10) {
+                showAlert('⚠️ El número de teléfono / WhatsApp es obligatorio y debe contener exactamente 10 dígitos numéricos.', true);
+                const regTelIn = document.getElementById('regTel');
+                if (regTelIn) regTelIn.focus();
+                return;
+            }
             const telefono = cleanTel;
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
@@ -485,22 +509,6 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando...`;
 
             if (supabaseClient) {
-                // 0. Verificar si el correo ya existe en la tabla clientes
-                try {
-                    const { data: existingClient } = await supabaseClient
-                        .from('clientes')
-                        .select('id, email')
-                        .ilike('email', email)
-                        .maybeSingle();
-
-                    if (existingClient) {
-                        showAlert('⚠️ Este correo electrónico ya está registrado. Por favor, inicia sesión con tu cuenta o utiliza otro correo.', true);
-                        btn.disabled = false;
-                        btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
-                        return;
-                    }
-                } catch(e) {}
-
                 // 1. Crear usuario en Supabase Auth
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
@@ -517,7 +525,7 @@
                     let msg = error.message || 'Error al crear la cuenta.';
                     const lowerMsg = msg.toLowerCase();
                     if (error.code === 'user_already_exists' || lowerMsg.includes('already registered') || lowerMsg.includes('already in use') || lowerMsg.includes('already exists') || lowerMsg.includes('registrado')) {
-                        msg = '⚠️ Este correo electrónico ya tiene una cuenta registrada. Por favor, inicia sesión o utiliza otro correo.';
+                        msg = '⚠️ Este correo electrónico ya tiene una cuenta registrada. Por favor, inicia sesión con tu contraseña o usa otro correo.';
                     } else if (error.code === 'email_provider_disabled' || lowerMsg.includes('disabled')) {
                         msg = 'El registro por correo está desactivado en Supabase. Ve a Authentication -> Sign In / Providers -> Email y actívalo (Enabled).';
                     }
@@ -527,7 +535,7 @@
                     return;
                 }
 
-                // 2. Insertar datos del cliente en la tabla 'clientes' (campos exactos: id, nombre_completo, telefono, email)
+                // 2. Insertar datos del cliente en la tabla 'clientes'
                 if (data.user) {
                     const { error: dbError } = await supabaseClient.from('clientes').insert([
                         {
@@ -562,7 +570,6 @@
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
-            }
         }
     </script>
 </body>
