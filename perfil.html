@@ -1109,15 +1109,21 @@
                 const userFirstName = userFullName.split(' ')[0] || '';
                 const userEmail = (currentUser.email || '').trim().toLowerCase();
 
-                // Consultar todos los pedidos de la tienda 111
-                const { data, error } = await supabaseClient
-                    .from('pedidos_web')
+                // Consultar primero desde la tabla dedicada pedidos_clientes_web
+                let { data, error } = await supabaseClient
+                    .from('pedidos_clientes_web')
                     .select('*')
                     .eq('comercio_id', 111)
                     .order('id', { ascending: false });
 
-                if (error) {
-                    console.log("Aviso al consultar pedidos_web:", error);
+                if (error || !data || data.length === 0) {
+                    // Respaldo desde pedidos_web si pedidos_clientes_web no tiene datos aún
+                    const res = await supabaseClient
+                        .from('pedidos_web')
+                        .select('*')
+                        .eq('comercio_id', 111)
+                        .order('id', { ascending: false });
+                    data = res.data || [];
                 }
 
                 // Filtrar en JavaScript los pedidos que pertenecen STRICTAMENTE a esta cuenta (por user_id o email exacto)

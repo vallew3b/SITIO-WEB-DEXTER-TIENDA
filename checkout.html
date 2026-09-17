@@ -1057,20 +1057,31 @@
                         }
                     } catch(e) {}
 
-                    const { error: insertErr } = await supabaseClient.from('pedidos_web').insert([{
+                    const orderPayload = {
                         cliente_nombre: nombre,
                         email: userEmailStr,
                         user_id: currentUserId,
+                        cliente_id: currentUserId,
                         telefono: tel,
                         direccion_envio: `${direccion}, ${ciudad}, C.P. ${cp}${referencias ? ' (Ref: ' + referencias + ')' : ''}`,
                         cp: cp,
                         paqueteria: selectedShippingName || 'Estafeta Express',
                         detalles_pedido: formattedCartItems,
                         total: grandTotal,
+                        monto_total: grandTotal,
                         estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
                         comercio_id: 111
-                    }]);
-                    if (insertErr) console.log("Aviso al registrar pedido en Supabase:", insertErr);
+                    };
+
+                    // Insertar en tabla dedicada pedidos_clientes_web
+                    try {
+                        await supabaseClient.from('pedidos_clientes_web').insert([orderPayload]);
+                    } catch(e) {}
+
+                    // Insertar en tabla pedidos_web por respaldo
+                    try {
+                        await supabaseClient.from('pedidos_web').insert([orderPayload]);
+                    } catch(e) {}
                 } catch(e) {
                     console.error("Error al registrar pedido:", e);
                 }
