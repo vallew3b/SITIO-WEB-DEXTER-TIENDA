@@ -36,8 +36,7 @@
 
         .profile-container {
             min-height: 85vh;
-            padding: 50px 20px;
-            overflow: visible !important;
+            padding: 40px 20px;
         }
 
         .profile-wrapper {
@@ -46,18 +45,7 @@
             display: grid;
             grid-template-columns: 290px 1fr;
             gap: 32px;
-            align-items: start !important;
-            overflow: visible !important;
-        }
-
-        @media (max-width: 880px) {
-            .profile-wrapper {
-                grid-template-columns: 1fr;
-            }
-            .profile-sidebar {
-                position: relative !important;
-                top: 0 !important;
-            }
+            align-items: start;
         }
 
         /* Sidebar del Perfil */
@@ -71,10 +59,40 @@
             gap: 22px;
             height: fit-content;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(201, 162, 101, 0.08);
-            position: -webkit-sticky !important;
-            position: sticky !important;
-            top: 30px !important;
-            z-index: 100;
+            position: relative;
+        }
+
+        @media (min-width: 881px) {
+            .profile-sidebar {
+                position: sticky;
+                top: 30px;
+                z-index: 10;
+            }
+        }
+
+        @media (max-width: 880px) {
+            .profile-container {
+                padding: 16px 12px;
+            }
+            .profile-wrapper {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .profile-sidebar {
+                position: static !important;
+                top: auto !important;
+                z-index: 1 !important;
+                padding: 20px 16px !important;
+            }
+            .profile-content-card {
+                padding: 22px 16px !important;
+            }
+            .profile-section-title {
+                font-size: 17px !important;
+            }
+            .desktop-text {
+                display: none;
+            }
         }
 
         .profile-sidebar::before {
@@ -513,15 +531,15 @@
 
     <!-- Header -->
     <header class="store-header">
-        <div class="container header-inner">
+        <div class="container header-inner" style="display: flex; align-items: center; justify-content: space-between;">
             <div class="header-logo-wrap">
                 <a href="index.html" class="header-logo-link">
-                    <img src="logo-imperial.jpg" alt="Imperial Design" class="header-logo-img" style="height: 44px;">
+                    <img src="logo-imperial.jpg" alt="Imperial Design" class="header-logo-img" style="height: 38px; max-height: 38px; width: auto; object-fit: contain; mix-blend-mode: screen; display: block;">
                 </a>
             </div>
-            <div style="margin-left: auto;">
-                <a href="index.html" class="sub-nav-link" style="color: #ffffff; text-decoration: none;">
-                    <i class="fa-solid fa-store"></i> Volver al Catálogo de Productos
+            <div>
+                <a href="index.html" class="sub-nav-link" style="color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); padding: 8px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-arrow-left" style="color: #c9a265;"></i> <span class="desktop-text">Volver al </span>Catálogo
                 </a>
             </div>
         </div>
