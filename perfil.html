@@ -10,7 +10,7 @@
     <meta name="description" content="Gestiona tu perfil, consulta el estado de tus pedidos y guarda tus prendas favoritas en Dexter Tienda.">
 
     <!-- Stylesheets & Fonts -->
-    <link rel="stylesheet" href="styles.css?v=5.0">
+    <link rel="stylesheet" href="styles.css?v=7.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Supabase JS Client CDN -->
@@ -815,6 +815,12 @@
 
         async function loadProfileData() {
             try {
+                // Refrescar metadatos actualizados desde Supabase Auth Server (Sincronización Celular/Laptop)
+                if (supabaseClient && supabaseClient.auth) {
+                    const { data: { user } } = await supabaseClient.auth.getUser();
+                    if (user) currentUser = user;
+                }
+
                 // 1. Cargar datos guardados en Auth user_metadata
                 const meta = currentUser.user_metadata || {};
                 if (meta.nombre_completo) document.getElementById('profNombre').value = meta.nombre_completo;
@@ -835,6 +841,9 @@
                     if (data.nombre_completo && !document.getElementById('profNombre').value) document.getElementById('profNombre').value = data.nombre_completo;
                     if (data.telefono && !document.getElementById('profTel').value) document.getElementById('profTel').value = data.telefono;
                     if (data.direccion && !document.getElementById('profDireccion').value) document.getElementById('profDireccion').value = data.direccion;
+                    if (data.ciudad && !document.getElementById('profCiudad').value) document.getElementById('profCiudad').value = data.ciudad;
+                    if (data.cp && !document.getElementById('profCP').value) document.getElementById('profCP').value = data.cp;
+                    if (data.referencias && !document.getElementById('profReferencias').value) document.getElementById('profReferencias').value = data.referencias;
                 }
             } catch (err) {
                 console.log("Aviso leyendo perfil:", err);
