@@ -614,7 +614,15 @@ function setupEvents() {
     const wishlistBtn = document.getElementById('wishlistBtn');
     if (wishlistBtn) {
         wishlistBtn.addEventListener('click', () => {
-            window.location.href = 'perfil.html?tab=favoritos';
+            const uid = getFavoritesStorageKey();
+            if (!uid) {
+                showToast("Iniciar Sesión", "Inicia sesión para guardar y ver tus favoritos.", "info");
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1000);
+            } else {
+                window.location.href = 'perfil.html?tab=favoritos';
+            }
         });
     }
 
@@ -837,27 +845,32 @@ function filterCatalog() {
 }
 
 // ==================================================
-// GESTIÓN DE FAVORITOS (PERSISTENTE POR CUENTA)
+// GESTIÓN DE FAVORITOS (EXCLUSIVOS POR CUENTA AUTENTICADA)
 // ==================================================
 function getFavoritesStorageKey() {
     try {
+        // Limpiar restos de clave antigua 'guest' si existe
+        if (localStorage.getItem('imperial_favs_guest')) {
+            localStorage.removeItem('imperial_favs_guest');
+        }
         for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
             if (k && (k.includes('auth-token') || k.includes('supabase.auth'))) {
                 const val = localStorage.getItem(k);
                 if (val && val.includes('"id"')) {
                     const parsed = JSON.parse(val);
-                    const uid = parsed?.user?.id || parsed?.currentSession?.user?.id || parsed?.user?.email;
+                    const uid = parsed?.user?.id || parsed?.currentSession?.user?.id;
                     if (uid) return `imperial_favs_${uid}`;
                 }
             }
         }
     } catch (e) { }
-    return 'imperial_favs_guest';
+    return null; // Sin usuario autenticado -> 0 favoritos
 }
 
 function getFavorites() {
     const key = getFavoritesStorageKey();
+    if (!key) return []; // Si no hay cuenta abierta, siempre es 0
     try {
         return JSON.parse(localStorage.getItem(key)) || [];
     } catch (e) { }
@@ -866,10 +879,11 @@ function getFavorites() {
 
 async function saveFavorites(favs) {
     const key = getFavoritesStorageKey();
+    if (!key) return;
     localStorage.setItem(key, JSON.stringify(favs));
     updateFavoritesBadge();
 
-    if (key !== 'imperial_favs_guest' && supabaseClient && supabaseClient.auth) {
+    if (supabaseClient && supabaseClient.auth) {
         try {
             await supabaseClient.auth.updateUser({
                 data: { favoritos: favs }
@@ -886,6 +900,16 @@ function isFavorite(productId) {
 
 function toggleFavorite(event, productId) {
     if (event) event.stopPropagation();
+
+    const key = getFavoritesStorageKey();
+    if (!key) {
+        showToast("Iniciar Sesión Required", "Debes iniciar sesión para guardar productos en tus favoritos.", "info");
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1200);
+        return;
+    }
+
     let favs = getFavorites();
     const index = favs.findIndex(fid => String(fid) === String(productId));
 
