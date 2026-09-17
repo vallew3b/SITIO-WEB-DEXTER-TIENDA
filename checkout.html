@@ -553,7 +553,21 @@
                     
                     <div class="shipping-options-grid">
                         
-                        <!-- Opción A: Correos de México -->
+                        <!-- Opción A: Entrega Personal / Recoger en Tienda -->
+                        <div class="shipping-option-card" id="cardPersonal" onclick="selectShipping('personal', 'Entrega Personal (Recoger en Tienda)')">
+                            <div class="shipping-info">
+                                <input type="radio" name="shippingCarrier" id="shipPersonal" class="shipping-radio">
+                                <div>
+                                    <div class="shipping-name">
+                                        <i class="fa-solid fa-store" style="color:#c9a265;"></i> Entrega Personal (Recoger en Tienda)
+                                    </div>
+                                    <div class="shipping-time">Entrega inmediata / Acordar punto ($0.00 MXN)</div>
+                                </div>
+                            </div>
+                            <div class="shipping-price" id="pricePersonal">$0.00</div>
+                        </div>
+
+                        <!-- Opción B: Correos de México -->
                         <div class="shipping-option-card" id="cardSepomex" onclick="selectShipping('sepomex', 'Correos de México')">
                             <div class="shipping-info">
                                 <input type="radio" name="shippingCarrier" id="shipSepomex" class="shipping-radio">
@@ -567,7 +581,7 @@
                             <div class="shipping-price" id="priceSepomex">$100.00</div>
                         </div>
 
-                        <!-- Opción B: Estafeta -->
+                        <!-- Opción C: Estafeta -->
                         <div class="shipping-option-card active" id="cardEstafeta" onclick="selectShipping('estafeta', 'Estafeta Express')">
                             <div class="shipping-info">
                                 <input type="radio" name="shippingCarrier" id="shipEstafeta" class="shipping-radio" checked>
@@ -581,7 +595,7 @@
                             <div class="shipping-price" id="priceEstafeta">$300.00</div>
                         </div>
 
-                        <!-- Opción C: DHL -->
+                        <!-- Opción D: DHL -->
                         <div class="shipping-option-card" id="cardDHL" onclick="selectShipping('dhl', 'DHL Express')">
                             <div class="shipping-info">
                                 <input type="radio" name="shippingCarrier" id="shipDHL" class="shipping-radio">
@@ -674,6 +688,8 @@
         const SUPABASE_URL = _dc(["aHR0cHM6Ly8=","cWxpbmZnc3E=","cHp5aGlvcXk=","Z2V2di5zdXA=","YWJhc2UuY28="]);
         const SUPABASE_KEY = _dc(["ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFg=","VkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbko=","bFppSTZJbkZzYVc1bVozTnhjSHA1YUdsdmNYbG5aWFo=","Mklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakU=","M056Y3hOVFkxTnpjc0ltVjRjQ0k2TWpBNU1qY3pNalU=","M04zMC40QWl0akN0cVZWTnVyOEFWN0ZvQTdEcDFtUG8=","bG44Q2Vhem00Z3BkSnhUMA=="]);
         const WHATSAPP_PHONE = _dc(["NTI3MzQx","NDM5Nzc5"]);
+        const MP_PUBLIC_KEY = "APP_USR-ee59339e-f6b7-4c8b-8dde-f4b60f8eecec";
+        const MP_ACCESS_TOKEN = "APP_USR-8643422788805645-091620-8a48eef2330142addfa6976593a4775d-3272401105";
 
         let supabaseClient = null;
         let cartItems = [];
@@ -705,7 +721,7 @@
         });
 
         let selectedCarrierKey = 'estafeta';
-        let carrierPrices = { sepomex: 100, estafeta: 300, dhl: 500 };
+        let carrierPrices = { personal: 0, sepomex: 100, estafeta: 300, dhl: 500 };
 
         function calculateEstimatedCartWeight() {
             return cartItems.reduce((totalWeight, item) => {
@@ -736,20 +752,23 @@
             }
 
             carrierPrices = {
+                personal: 0,
                 sepomex: baseSepomex,
                 estafeta: baseEstafeta,
                 dhl: baseDHL
             };
 
+            const elPer = document.getElementById('pricePersonal');
             const elSep = document.getElementById('priceSepomex');
             const elEst = document.getElementById('priceEstafeta');
             const elDHL = document.getElementById('priceDHL');
 
+            if (elPer) elPer.textContent = '$0.00';
             if (elSep) elSep.textContent = `$${baseSepomex.toFixed(2)}`;
             if (elEst) elEst.textContent = `$${baseEstafeta.toFixed(2)}`;
             if (elDHL) elDHL.textContent = `$${baseDHL.toFixed(2)}`;
 
-            selectedShippingCost = carrierPrices[selectedCarrierKey] || 300;
+            selectedShippingCost = carrierPrices[selectedCarrierKey] ?? 0;
             recalculateTotals();
         }
 
@@ -794,12 +813,17 @@
         function selectShipping(carrierKey, name) {
             selectedCarrierKey = carrierKey;
             selectedShippingName = name;
-            selectedShippingCost = carrierPrices[carrierKey] || 300;
+            selectedShippingCost = carrierPrices[carrierKey] ?? 0;
 
             document.querySelectorAll('.shipping-option-card').forEach(card => card.classList.remove('active'));
             document.querySelectorAll('.shipping-radio').forEach(r => r.checked = false);
 
-            if (carrierKey === 'sepomex') {
+            if (carrierKey === 'personal') {
+                const radio = document.getElementById('shipPersonal');
+                const card = document.getElementById('cardPersonal');
+                if (radio) radio.checked = true;
+                if (card) card.classList.add('active');
+            } else if (carrierKey === 'sepomex') {
                 document.getElementById('shipSepomex').checked = true;
                 document.getElementById('cardSepomex').classList.add('active');
             } else if (carrierKey === 'estafeta') {
@@ -941,7 +965,7 @@
                         cliente_nombre: nombre,
                         detalles_pedido: cartItems,
                         total: grandTotal,
-                        estado: 'pendiente',
+                        estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
                         comercio_id: 105
                     }]);
                     if (insertErr) console.log("Aviso al registrar pedido en Supabase:", insertErr);
@@ -951,8 +975,85 @@
             }
 
             if (selectedPaymentType === 'mercadopago') {
-                alert("🛒 ¡Redirigiendo a Mercado Pago! (Pasarela en modo integración listo).");
-                return;
+                const finalBtn = document.getElementById('btnFinalizeOrder');
+                if (finalBtn) {
+                    finalBtn.disabled = true;
+                    finalBtn.style.opacity = '0.7';
+                    finalBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i> <span>Generando cobro de Mercado Pago...</span>`;
+                }
+
+                try {
+                    const mpItems = cartItems.map(item => ({
+                        title: `${item.nombre}${item.talla ? ' - Talla: ' + item.talla : ''}`,
+                        quantity: Number(item.cantidad) || 1,
+                        unit_price: Number(item.precioUnitario) || 0,
+                        currency_id: 'MXN'
+                    }));
+
+                    if (selectedShippingCost > 0) {
+                        mpItems.push({
+                            title: `Envío (${selectedShippingName})`,
+                            quantity: 1,
+                            unit_price: Number(selectedShippingCost),
+                            currency_id: 'MXN'
+                        });
+                    }
+
+                    const currentOrigin = window.location.origin;
+                    const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                    const baseUrl = currentOrigin + currentPath;
+
+                    const mpBody = {
+                        items: mpItems,
+                        payer: {
+                            name: nombre,
+                            phone: { number: tel },
+                            address: { street_name: direccion, zip_code: cp }
+                        },
+                        back_urls: {
+                            success: `${baseUrl}perfil.html?order=mp_success`,
+                            failure: `${baseUrl}checkout.html?order=mp_failure`,
+                            pending: `${baseUrl}perfil.html?order=mp_pending`
+                        },
+                        auto_return: "approved",
+                        statement_descriptor: "IMPERIAL DESIGN"
+                    };
+
+                    const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(mpBody)
+                    });
+
+                    const data = await res.json();
+
+                    if (data.init_point) {
+                        localStorage.removeItem('imperial_cart');
+                        window.location.href = data.init_point;
+                        return;
+                    } else {
+                        console.error("Error Mercado Pago API:", data);
+                        alert("Ocurrió un inconveniente al conectar con Mercado Pago. Intenta nuevamente o usa WhatsApp.");
+                        if (finalBtn) {
+                            finalBtn.disabled = false;
+                            finalBtn.style.opacity = '1';
+                            finalBtn.innerHTML = `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
+                        }
+                        return;
+                    }
+                } catch(err) {
+                    console.error("Error al procesar Mercado Pago:", err);
+                    alert("Ocurrió un error al procesar el pago con Mercado Pago.");
+                    if (finalBtn) {
+                        finalBtn.disabled = false;
+                        finalBtn.style.opacity = '1';
+                        finalBtn.innerHTML = `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
+                    }
+                    return;
+                }
             }
 
             // 2. Formatear mensaje para WhatsApp

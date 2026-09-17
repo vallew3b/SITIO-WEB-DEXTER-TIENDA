@@ -745,10 +745,18 @@
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             }
 
-            // Revisar si viene parámetro en URL (?tab=pedidos o ?tab=datos)
+            // Revisar si viene parámetro en URL (?tab=pedidos o ?tab=datos o ?order=mp_success)
             const urlParams = new URLSearchParams(window.location.search);
             const targetTab = urlParams.get('tab');
-            if (targetTab) {
+            const orderStatus = urlParams.get('order');
+
+            if (orderStatus === 'mp_success') {
+                switchProfileTab('pedidos');
+                alert("🎉 ¡Gracias por tu compra! Tu pago por Mercado Pago ha sido recibido con éxito.");
+            } else if (orderStatus === 'mp_pending') {
+                switchProfileTab('pedidos');
+                alert("⏳ Tu pago por Mercado Pago está pendiente de acreditación (por ejemplo, OXXO o SPEI). En cuanto se confirme, se actualizará tu pedido.");
+            } else if (targetTab) {
                 switchProfileTab(targetTab);
             }
 
