@@ -736,7 +736,6 @@
         const SUPABASE_KEY = _dc(["c2JfcHVibGlzaGFibGVf", "U1c0MVJGckVubkY3TGNoYWtTZHlvQV9Od0ZYNy1Deg=="]);
         const WHATSAPP_PHONE = _dc(["NTI3MzQx", "NDM5Nzc5"]);
         const MP_PUBLIC_KEY = "APP_USR-58ae7e0c-887c-4e53-981c-2ca38ea90b0a";
-        const MP_ACCESS_TOKEN = "APP_USR-4491252823742678-061123-9a318cdf728f1e9310d6563a85ac06b9-1353270983";
 
         let supabaseClient = null;
         let cartItems = [];
@@ -1193,11 +1192,10 @@
                         statement_descriptor: "IMPERIAL DESIGN"
                     };
 
-                    const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                    const res = await fetch('https://dry-lake-62e5.ronaldoweb50.workers.dev', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + MP_ACCESS_TOKEN
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(mpBody)
                     });

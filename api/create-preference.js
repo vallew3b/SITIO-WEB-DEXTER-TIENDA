@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     try {
         const { items, payer, back_urls, statement_descriptor, accessToken } = req.body;
 
-        const MP_ACCESS_TOKEN = accessToken || process.env.MP_ACCESS_TOKEN || "APP_USR-4491252823742678-061123-9a318cdf728f1e9310d6563a85ac06b9-1353270983";
+        const MP_ACCESS_TOKEN = accessToken || process.env.MP_ACCESS_TOKEN;
 
         const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
             method: 'POST',
