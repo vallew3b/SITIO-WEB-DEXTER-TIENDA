@@ -6,21 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Security Meta Tags (HTTP Headers fallback) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https: data:;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https: data:;">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
     <!-- SEO Meta Tags -->
     <title>Finalizar Compra & Envío | Dexter Tienda - Imperial Design</title>
-    <meta name="description" content="Completa tu pedido, elige tu paquetería preferida (Estafeta, Correos de México, DHL) y selecciona tu método de pago.">
+    <meta name="description"
+        content="Completa tu pedido, elige tu paquetería preferida (Estafeta, Correos de México, DHL) y selecciona tu método de pago.">
 
     <!-- Stylesheets & Fonts -->
     <link rel="stylesheet" href="styles.css?v=5.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <!-- Mercado Pago SDK (Preparado) -->
     <script src="https://sdk.mercadopago.com/js/v2"></script>
 
@@ -451,7 +453,8 @@
     <!-- Top Announcement Bar -->
     <div class="top-announcement-bar">
         <div class="container top-announcement-content">
-            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el país</span>
+            <span class="announcement-text">No te pierdas las <strong>promos</strong> del momento • Envíos a todo el
+                país</span>
         </div>
     </div>
 
@@ -474,28 +477,31 @@
     <!-- Main Checkout -->
     <main class="checkout-container">
         <div class="checkout-layout">
-            
+
             <!-- Columna Izquierda: Formulario & Opciones -->
             <div class="checkout-main-col">
-                
+
                 <!-- PASO 1: DATOS DE ENVÍO -->
                 <div class="checkout-section-box">
-                    <h2 class="checkout-step-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h2 class="checkout-step-title"
+                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <span class="step-number">1</span> Domicilio y Datos de Envío
                         </div>
-                        <span id="savedAddressBadge" style="display: none; font-size: 12px; font-weight: 700; color: #c9a265; background: rgba(201, 162, 101, 0.14); border: 1px solid rgba(201, 162, 101, 0.3); padding: 5px 14px; border-radius: 20px; align-items: center; gap: 6px;">
+                        <span id="savedAddressBadge"
+                            style="display: none; font-size: 12px; font-weight: 700; color: #c9a265; background: rgba(201, 162, 101, 0.14); border: 1px solid rgba(201, 162, 101, 0.3); padding: 5px 14px; border-radius: 20px; align-items: center; gap: 6px;">
                             <i class="fa-solid fa-house-circle-check"></i> Domicilio Predeterminado Cargado
                         </span>
                     </h2>
-                    
+
                     <form id="checkoutShippingForm">
                         <div class="address-form-grid">
                             <div class="form-group">
                                 <label class="form-label" for="chkNombre">Nombre(s)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-user form-input-icon"></i>
-                                    <input type="text" id="chkNombre" class="form-input" placeholder="Ej. Juan" required>
+                                    <input type="text" id="chkNombre" class="form-input" placeholder="Ej. Juan"
+                                        required>
                                 </div>
                             </div>
 
@@ -503,7 +509,8 @@
                                 <label class="form-label" for="chkApellido">Apellido(s)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-user-tag form-input-icon"></i>
-                                    <input type="text" id="chkApellido" class="form-input" placeholder="Ej. Pérez" required>
+                                    <input type="text" id="chkApellido" class="form-input" placeholder="Ej. Pérez"
+                                        required>
                                 </div>
                             </div>
 
@@ -511,7 +518,9 @@
                                 <label class="form-label" for="chkTel">Teléfono / WhatsApp (10 dígitos)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-brands fa-whatsapp form-input-icon"></i>
-                                    <input type="tel" id="chkTel" class="form-input" placeholder="Ej: 7341439779 (10 dígitos)" required maxlength="10" pattern="[0-9]{10}" inputmode="numeric">
+                                    <input type="tel" id="chkTel" class="form-input"
+                                        placeholder="Ej: 7341439779 (10 dígitos)" required maxlength="10"
+                                        pattern="[0-9]{10}" inputmode="numeric">
                                 </div>
                             </div>
 
@@ -519,7 +528,8 @@
                                 <label class="form-label" for="chkDireccion">Dirección de Envío (Calle y Número)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-location-dot form-input-icon"></i>
-                                    <input type="text" id="chkDireccion" class="form-input" placeholder="Ej. Av. Hidalgo #123, Col. Centro" required>
+                                    <input type="text" id="chkDireccion" class="form-input"
+                                        placeholder="Ej. Av. Hidalgo #123, Col. Centro" required>
                                 </div>
                             </div>
 
@@ -527,7 +537,8 @@
                                 <label class="form-label" for="chkCiudad">Ciudad / Municipio</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-city form-input-icon"></i>
-                                    <input type="text" id="chkCiudad" class="form-input" placeholder="Ej. Cuernavaca" required>
+                                    <input type="text" id="chkCiudad" class="form-input" placeholder="Ej. Cuernavaca"
+                                        required>
                                 </div>
                             </div>
 
@@ -535,23 +546,30 @@
                                 <label class="form-label" for="chkCP">Código Postal (5 dígitos)</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-map-pin form-input-icon"></i>
-                                    <input type="tel" id="chkCP" class="form-input" placeholder="Ej. 62000" required maxlength="5" pattern="[0-9]{5}" inputmode="numeric">
+                                    <input type="tel" id="chkCP" class="form-input" placeholder="Ej. 62000" required
+                                        maxlength="5" pattern="[0-9]{5}" inputmode="numeric">
                                 </div>
-                                <div id="shippingApiStatus" style="display:none; font-size:12px; color:rgba(255,255,255,0.75); margin-top:4px;"></div>
+                                <div id="shippingApiStatus"
+                                    style="display:none; font-size:12px; color:rgba(255,255,255,0.75); margin-top:4px;">
+                                </div>
                             </div>
 
                             <div class="form-group full-width">
                                 <label class="form-label" for="chkReferencias">Referencias del Domicilio</label>
                                 <div class="form-input-wrap">
                                     <i class="fa-solid fa-circle-info form-input-icon"></i>
-                                    <input type="text" id="chkReferencias" class="form-input" placeholder="Ej. Casa de fachada color negro entre calle 1 y 2">
+                                    <input type="text" id="chkReferencias" class="form-input"
+                                        placeholder="Ej. Casa de fachada color negro entre calle 1 y 2">
                                 </div>
                             </div>
 
                             <div class="form-group full-width" style="margin-top: 6px;">
-                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #c9a265; font-size: 13.5px; font-weight: 700; background: rgba(255, 255, 255, 0.03); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(201, 162, 101, 0.25); transition: all 0.25s ease;">
-                                    <input type="checkbox" id="chkSaveAddressAsDefault" checked style="accent-color: #c9a265; width: 18px; height: 18px; cursor: pointer;">
-                                    <span><i class="fa-solid fa-floppy-disk"></i> Guardar / Actualizar como mi dirección predeterminada para futuros pedidos</span>
+                                <label
+                                    style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #c9a265; font-size: 13.5px; font-weight: 700; background: rgba(255, 255, 255, 0.03); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(201, 162, 101, 0.25); transition: all 0.25s ease;">
+                                    <input type="checkbox" id="chkSaveAddressAsDefault" checked
+                                        style="accent-color: #c9a265; width: 18px; height: 18px; cursor: pointer;">
+                                    <span><i class="fa-solid fa-floppy-disk"></i> Guardar / Actualizar como mi dirección
+                                        predeterminada para futuros pedidos</span>
                                 </label>
                             </div>
                         </div>
@@ -563,16 +581,18 @@
                     <h2 class="checkout-step-title">
                         <span class="step-number">2</span> Selecciona tu Tipo de Paquetería
                     </h2>
-                    
+
                     <div class="shipping-options-grid">
-                        
+
                         <!-- Opción A: Entrega Personal / Recoger en Tienda -->
-                        <div class="shipping-option-card" id="cardPersonal" onclick="selectShipping('personal', 'Entrega Personal (Recoger en Tienda)')">
+                        <div class="shipping-option-card" id="cardPersonal"
+                            onclick="selectShipping('personal', 'Entrega Personal (Recoger en Tienda)')">
                             <div class="shipping-info">
                                 <input type="radio" name="shippingCarrier" id="shipPersonal" class="shipping-radio">
                                 <div>
                                     <div class="shipping-name">
-                                        <i class="fa-solid fa-store" style="color:#c9a265;"></i> Entrega Personal (Recoger en Tienda)
+                                        <i class="fa-solid fa-store" style="color:#c9a265;"></i> Entrega Personal
+                                        (Recoger en Tienda)
                                     </div>
                                     <div class="shipping-time">Entrega inmediata / Acordar punto ($0.00 MXN)</div>
                                 </div>
@@ -581,12 +601,14 @@
                         </div>
 
                         <!-- Opción B: Correos de México -->
-                        <div class="shipping-option-card" id="cardSepomex" onclick="selectShipping('sepomex', 'Correos de México')">
+                        <div class="shipping-option-card" id="cardSepomex"
+                            onclick="selectShipping('sepomex', 'Correos de México')">
                             <div class="shipping-info">
                                 <input type="radio" name="shippingCarrier" id="shipSepomex" class="shipping-radio">
                                 <div>
                                     <div class="shipping-name">
-                                        <i class="fa-solid fa-box" style="color:#c9a265;"></i> Correos de México (SEPOMEX)
+                                        <i class="fa-solid fa-box" style="color:#c9a265;"></i> Correos de México
+                                        (SEPOMEX)
                                     </div>
                                     <div class="shipping-time">Envío económico (5 a 8 días hábiles)</div>
                                 </div>
@@ -595,9 +617,11 @@
                         </div>
 
                         <!-- Opción C: Estafeta -->
-                        <div class="shipping-option-card active" id="cardEstafeta" onclick="selectShipping('estafeta', 'Estafeta Express')">
+                        <div class="shipping-option-card active" id="cardEstafeta"
+                            onclick="selectShipping('estafeta', 'Estafeta Express')">
                             <div class="shipping-info">
-                                <input type="radio" name="shippingCarrier" id="shipEstafeta" class="shipping-radio" checked>
+                                <input type="radio" name="shippingCarrier" id="shipEstafeta" class="shipping-radio"
+                                    checked>
                                 <div>
                                     <div class="shipping-name">
                                         <i class="fa-solid fa-truck-fast" style="color:#c9a265;"></i> Estafeta Express
@@ -632,7 +656,8 @@
                     </h2>
 
                     <div class="payment-methods-grid">
-                        <div class="payment-method-btn active" id="payMethodWA" onclick="selectPaymentMethod('whatsapp')">
+                        <div class="payment-method-btn active" id="payMethodWA"
+                            onclick="selectPaymentMethod('whatsapp')">
                             <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
                             <div class="payment-title">Pedido por WhatsApp</div>
                             <div class="payment-subtitle">Acuerda stock y pago directo con el vendedor</div>
@@ -646,10 +671,13 @@
                     </div>
 
                     <!-- Contenedor dinámico Mercado Pago -->
-                    <div id="mercadoPagoContainer" style="display: none; padding: 20px; background: rgba(0, 158, 227, 0.08); border: 1px solid rgba(0, 158, 227, 0.3); border-radius: 14px; text-align: center;">
-                        <i class="fa-solid fa-shield-halved" style="font-size: 32px; color: #009ee3; margin-bottom: 8px;"></i>
+                    <div id="mercadoPagoContainer"
+                        style="display: none; padding: 20px; background: rgba(0, 158, 227, 0.08); border: 1px solid rgba(0, 158, 227, 0.3); border-radius: 14px; text-align: center;">
+                        <i class="fa-solid fa-shield-halved"
+                            style="font-size: 32px; color: #009ee3; margin-bottom: 8px;"></i>
                         <h4 style="color: #ffffff; margin-bottom: 4px;">Pasarela Mercado Pago Preparada</h4>
-                        <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 14px;">El cobro seguro procesará tus prendas más el costo de la paquetería seleccionada.</p>
+                        <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 14px;">El cobro seguro
+                            procesará tus prendas más el costo de la paquetería seleccionada.</p>
                         <div id="wallet_container"></div>
                     </div>
                 </div>
@@ -659,7 +687,8 @@
             <!-- Columna Derecha: Resumen de Compra -->
             <div class="checkout-summary-col">
                 <div class="summary-card">
-                    <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 16px; font-family: 'Outfit', sans-serif;">
+                    <h3
+                        style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 16px; font-family: 'Outfit', sans-serif;">
                         Resumen del Pedido
                     </h3>
 
@@ -685,7 +714,8 @@
                     </div>
 
                     <!-- Botón Principal de Acción -->
-                    <button type="button" class="btn-confirm-order" id="btnFinalizeOrder" onclick="processFinalCheckout()">
+                    <button type="button" class="btn-confirm-order" id="btnFinalizeOrder"
+                        onclick="processFinalCheckout()">
                         <i class="fa-brands fa-whatsapp" style="font-size: 20px;"></i>
                         <span>Confirmar por WhatsApp</span>
                     </button>
@@ -700,9 +730,9 @@
         const _dc = (c) => c.map(p => atob(p)).join('');
         const SUPABASE_URL = _dc(["aHR0cHM6Ly8=", "YWVqdGt5ZWVib3ZqZml1eG13a3M=", "LnN1cGFiYXNlLmNv"]);
         const SUPABASE_KEY = _dc(["c2JfcHVibGlzaGFibGVf", "U1c0MVJGckVubkY3TGNoYWtTZHlvQV9Od0ZYNy1Deg=="]);
-        const WHATSAPP_PHONE = _dc(["NTI3MzQx","NDM5Nzc5"]);
-        const MP_PUBLIC_KEY = "APP_USR-ee59339e-f6b7-4c8b-8dde-f4b60f8eecec";
-        const MP_ACCESS_TOKEN = "APP_USR-8643422788805645-091620-8a48eef2330142addfa6976593a4775d-3272401105";
+        const WHATSAPP_PHONE = _dc(["NTI3MzQx", "NDM5Nzc5"]);
+        const MP_PUBLIC_KEY = "APP_USR-58ae7e0c-887c-4e53-981c-2ca38ea90b0a";
+        const MP_ACCESS_TOKEN = "APP_USR-4491252823742678-061123-9a318cdf728f1e9310d6563a85ac06b9-1353270983";
 
         let supabaseClient = null;
         let cartItems = [];
@@ -746,7 +776,7 @@
             // Cargar carrito guardado en localStorage
             const savedCart = localStorage.getItem('imperial_cart');
             if (savedCart) {
-                try { cartItems = JSON.parse(savedCart); } catch(e) {}
+                try { cartItems = JSON.parse(savedCart); } catch (e) { }
             }
 
             if (!cartItems || cartItems.length === 0) {
@@ -778,7 +808,7 @@
 
         function updateCarrierRatesBasedOnWeight() {
             const totalWeight = calculateEstimatedCartWeight();
-            
+
             // Tarifas base (hasta 2.0 kg)
             let baseSepomex = 100;
             let baseEstafeta = 300;
@@ -948,14 +978,14 @@
                             if (data.referencias && !meta.referencias) document.getElementById('chkReferencias').value = data.referencias;
                             if (data.direccion || data.ciudad) hasSavedAddress = true;
                         }
-                    } catch(e) {}
+                    } catch (e) { }
 
                     const badge = document.getElementById('savedAddressBadge');
                     if (badge && hasSavedAddress) {
                         badge.style.display = 'inline-flex';
                     }
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         async function processFinalCheckout() {
@@ -1044,10 +1074,10 @@
                                     telefono: tel,
                                     comercio_id: 111
                                 }]);
-                            } catch(e) {}
+                            } catch (e) { }
                         }
                     }
-                } catch(e) {}
+                } catch (e) { }
 
                 // Registra pedido en tabla pedidos_web (Columnas compatibles con la tabla real y POS)
                 try {
@@ -1070,7 +1100,7 @@
                             userEmailStr = user.email || '';
                             currentUserId = user.id || null;
                         }
-                    } catch(e) {}
+                    } catch (e) { }
 
                     const pedidosWebPayload = {
                         cliente_nombre: nombre,
@@ -1099,8 +1129,8 @@
                             cliente_id: currentUserId || null,
                             monto_total: grandTotal
                         }]);
-                    } catch(e) {}
-                } catch(e) {
+                    } catch (e) { }
+                } catch (e) {
                     console.error("Error al registrar pedido:", e);
                 }
             }
@@ -1175,7 +1205,7 @@
                         }
                         return;
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error("Error al procesar Mercado Pago:", err);
                     alert("Ocurrió un error al procesar el pago con Mercado Pago.");
                     if (finalBtn) {
@@ -1188,12 +1218,12 @@
             }
 
             // 2. Formatear mensaje para WhatsApp
-            const itemsText = cartItems.map(item => 
+            const itemsText = cartItems.map(item =>
                 `• ${item.nombre} (Talla: ${item.talla || 'Única'}) x${item.cantidad} - $${(item.precioUnitario * item.cantidad).toFixed(2)}`
             ).join('\n');
 
-            const message = 
-`*NUEVO PEDIDO CON ENVÍO - IMPERIAL DESIGN* 🛍️
+            const message =
+                `*NUEVO PEDIDO CON ENVÍO - IMPERIAL DESIGN* 🛍️
 ----------------------------------
 👤 *Cliente:* ${nombre}
 📱 *Teléfono:* ${tel}
@@ -1216,10 +1246,10 @@ ${itemsText}
 _Por favor confírmame disponibilidad para realizar el pago de mi pedido._`;
 
             const waLink = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-            
+
             // Limpiar carrito local
             localStorage.removeItem('imperial_cart');
-            
+
             // Redirección directa a WhatsApp sin bloqueo de emergentes
             window.location.href = waLink;
         }
