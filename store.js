@@ -736,6 +736,12 @@ function selectCategory(categoryName) {
     }
 
     filterCatalog();
+
+    // Scroll suave automático hacia la sección de productos
+    const targetSection = document.getElementById('newProductsSection') || document.getElementById('catalogGrid');
+    if (targetSection) {
+        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 // Filtrar catálogo por búsqueda y categoría
