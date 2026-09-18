@@ -1045,10 +1045,10 @@
             if (finalBtn) {
                 finalBtn.disabled = true;
                 finalBtn.style.opacity = '0.7';
-                if (selectedPaymentType === 'whatsapp') {
-                    finalBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i> <span>Registrando pedido...</span>`;
-                }
+                finalBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i> <span>Procesando...</span>`;
             }
+
+            let createdOrderId = null;
 
             // 1. Guardar o actualizar datos de envío en perfil (nube) y clientes si está activada la opción
             if (supabaseClient) {
@@ -1083,7 +1083,6 @@
                     }
                 } catch (e) { }
 
-                let createdOrderId = null;
                 try {
                     const formattedCartItems = cartItems.map(item => {
                         const priceNum = Number(item.precioUnitario || item.precioVenta || item.precio || 0);
@@ -1153,13 +1152,6 @@
             const orderIdStr = createdOrderId ? `#PED-${createdOrderId}` : 'Nuevo';
 
             if (selectedPaymentType === 'mercadopago') {
-                const finalBtn = document.getElementById('btnFinalizeOrder');
-                if (finalBtn) {
-                    finalBtn.disabled = true;
-                    finalBtn.style.opacity = '0.7';
-                    finalBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i> <span>Generando cobro de Mercado Pago...</span>`;
-                }
-
                 try {
                     const mpItems = cartItems.map(item => {
                         const priceNum = Number(item.precioUnitario || item.precioVenta || item.precio || 0);
@@ -1224,7 +1216,7 @@
                         if (finalBtn) {
                             finalBtn.disabled = false;
                             finalBtn.style.opacity = '1';
-                            finalBtn.innerHTML = `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
+                            finalBtn.innerHTML = originalBtnHtml || `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
                         }
                         return;
                     }
@@ -1234,7 +1226,7 @@
                     if (finalBtn) {
                         finalBtn.disabled = false;
                         finalBtn.style.opacity = '1';
-                        finalBtn.innerHTML = `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
+                        finalBtn.innerHTML = originalBtnHtml || `<i class="fa-solid fa-credit-card" style="font-size: 18px;"></i> <span>Pagar con Mercado Pago</span>`;
                     }
                     return;
                 }
