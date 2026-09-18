@@ -1180,16 +1180,33 @@
                         statement_descriptor: "IMPERIAL DESIGN"
                     };
 
-                    const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(mpBody)
-                    });
+                    let data = null;
+                    try {
+                        const resApi = await fetch('/api/create-preference', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...mpBody, accessToken: MP_ACCESS_TOKEN })
+                        });
+                        if (resApi.ok) {
+                            data = await resApi.json();
+                        }
+                    } catch(e) {
+                        console.log("Servidor API local no disponible, utilizando directo:", e);
+                    }
 
-                    const redirectUrl = data.init_point || data.sandbox_init_point;
+                    if (!data || (!data.init_point && !data.sandbox_init_point)) {
+                        const resDirect = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(mpBody)
+                        });
+                        data = await resDirect.json();
+                    }
+
+                    const redirectUrl = data ? (data.init_point || data.sandbox_init_point) : null;
 
                     if (redirectUrl) {
                         localStorage.removeItem('imperial_cart');
@@ -1197,7 +1214,8 @@
                         return;
                     } else {
                         console.error("Error Mercado Pago API:", data);
-                        alert("Ocurrió un inconveniente al conectar con Mercado Pago. Intenta nuevamente o usa WhatsApp.");
+                        let errMsg = data?.message || data?.error || (data?.cause ? data.cause.map(c => c.description).join(', ') : "Error al conectar con Mercado Pago.");
+                        alert(`⚠️ Mercado Pago: ${errMsg}`);
                         if (finalBtn) {
                             finalBtn.disabled = false;
                             finalBtn.style.opacity = '1';
