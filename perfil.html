@@ -547,6 +547,67 @@
 
     <!-- Main Profile Dashboard -->
     <main class="profile-container">
+        
+        <!-- DEDICATED ORDER CONFIRMATION VIEW (Muestra solo al regresar de Mercado Pago / Pago) -->
+        <div id="orderConfirmationView" style="display: none; max-width: 780px; margin: 0 auto; padding: 20px 10px;">
+            <div style="background: #0d0d0d; border: 1px solid rgba(201, 162, 101, 0.4); border-radius: 24px; padding: 40px 30px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.9), 0 0 40px rgba(201, 162, 101, 0.18);">
+                
+                <!-- Icono Principal -->
+                <div id="confHeaderIcon" style="width: 76px; height: 76px; border-radius: 50%; background: rgba(52, 211, 153, 0.15); border: 2px solid #34d399; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 0 25px rgba(52, 211, 153, 0.3);">
+                    <i class="fa-solid fa-circle-check" style="font-size: 40px; color: #34d399;"></i>
+                </div>
+                
+                <h1 id="confTitle" style="font-size: 26px; font-weight: 800; color: #ffffff; margin: 0 0 8px 0; letter-spacing: -0.5px;">¡Pedido Confirmado y Pago Aprobado!</h1>
+                <p id="confSubtitle" style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 24px; max-width: 540px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                    Gracias por tu compra. Tu pedido se ha registrado correctamente y estamos preparando tu paquete.
+                </p>
+                
+                <!-- Folio Badge -->
+                <div style="background: rgba(201, 162, 101, 0.12); border: 1px solid rgba(201, 162, 101, 0.4); border-radius: 16px; padding: 14px 28px; display: inline-block; margin-bottom: 30px;">
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: block; margin-bottom: 4px;">Folio de Pedido</span>
+                    <span id="confFolio" style="font-size: 26px; font-weight: 900; color: #c9a265; letter-spacing: 1px;">#PED-57</span>
+                </div>
+                
+                <!-- Detalle Grid: 2 Columnas -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; text-align: left; margin-bottom: 24px;">
+                    
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px;">
+                        <span style="font-size: 11px; color: #c9a265; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;"><i class="fa-solid fa-credit-card"></i> Estado del Pago</span>
+                        <div id="confPayStatus" style="font-weight: 700; font-size: 14px; color: #34d399;">Aprobado (Mercado Pago)</div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px;">
+                        <span style="font-size: 11px; color: #c9a265; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;"><i class="fa-solid fa-truck"></i> Estatus del Envío</span>
+                        <div id="confShipStatus" style="font-weight: 700; font-size: 14px; color: #60a5fa;">En Preparación</div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; grid-column: 1 / -1;">
+                        <span style="font-size: 11px; color: #c9a265; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;"><i class="fa-solid fa-location-dot"></i> Datos de Envío & Dirección</span>
+                        <div id="confAddress" style="font-size: 13px; color: rgba(255,255,255,0.9);">Cargando información del pedido...</div>
+                    </div>
+
+                </div>
+                
+                <!-- Productos Comprados -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; text-align: left; margin-bottom: 30px;">
+                    <span style="font-size: 12px; color: #c9a265; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 12px;"><i class="fa-solid fa-box-open"></i> Resumen de Prendas:</span>
+                    <div id="confItemsList"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; gap: 8px;">
+                        <span style="font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 600;">Monto Total del Pedido:</span>
+                        <span id="confGrandTotal" style="font-size: 22px; font-weight: 900; color: #c9a265;">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Botón Volver al Inicio -->
+                <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+                    <a href="index.html" class="track-search-btn" style="background: linear-gradient(135deg, #c9a265 0%, #a37f44 100%); color: #000; padding: 14px 32px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 15px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s ease;">
+                        <i class="fa-solid fa-house"></i> Volver al Catálogo Principal
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
         <div class="profile-wrapper">
             
             <!-- Sidebar -->
@@ -770,64 +831,134 @@
             const orderStatus = urlParams.get('order');
             const urlOrderId = urlParams.get('order_id') || urlParams.get('external_reference') || '';
 
-            if (orderStatus === 'mp_success') {
-                const alertBox = document.getElementById('profileAlert');
-                if (alertBox) {
-                    const folioTag = urlOrderId ? `#PED-${urlOrderId}` : 'Confirmado';
-                    alertBox.innerHTML = `
-                        <div style="padding: 6px;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <i class="fa-solid fa-circle-check" style="font-size: 26px; color: #34d399;"></i>
-                                <span style="font-size: 18px; font-weight: 800; color: #ffffff;">¡Pago Aprobado y Pedido Confirmado!</span>
-                            </div>
-                            <p style="font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
-                                Tu pago por Mercado Pago fue procesado con éxito. Tu Folio de Pedido es: <strong style="color: #c9a265; font-size: 17px;">${folioTag}</strong>
-                            </p>
-                            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 14px;">
-                                💡 <strong>Guarda tu Folio (${folioTag}):</strong> Con este número podrás consultar el estatus de tu envío en cualquier momento sin necesidad de crear cuenta.
-                            </p>
-                            ${urlOrderId ? `
-                                <button onclick="openTrackOrderModal('${urlOrderId}')" class="track-search-btn" style="background: linear-gradient(135deg, #c9a265 0%, #a37f44 100%); color: #000; padding: 10px 18px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                                    <i class="fa-solid fa-truck-fast"></i> Ver Estatus de mi Pedido ${folioTag}
-                                </button>
-                            ` : ''}
-                        </div>
-                    `;
-                    alertBox.className = 'auth-msg success';
-                    alertBox.style.display = 'block';
-                }
-            } else if (orderStatus === 'mp_pending') {
-                const alertBox = document.getElementById('profileAlert');
-                if (alertBox) {
-                    const folioTag = urlOrderId ? `#PED-${urlOrderId}` : 'En proceso';
-                    alertBox.innerHTML = `
-                        <div style="padding: 6px;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <i class="fa-solid fa-clock" style="font-size: 24px; color: #fbbf24;"></i>
-                                <span style="font-size: 17px; font-weight: 800; color: #ffffff;">Pago Pendiente de Acreditación</span>
-                            </div>
-                            <p style="font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 10px;">
-                                Tu pago se está procesando (OXXO/SPEI). Tu Folio de Pedido es: <strong style="color: #c9a265;">${folioTag}</strong>
-                            </p>
-                            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">
-                                En cuanto Mercado Pago confirme la recepción del dinero, tu pedido pasará a preparación automáticamente.
-                            </p>
-                            ${urlOrderId ? `
-                                <button onclick="openTrackOrderModal('${urlOrderId}')" class="track-search-btn" style="background: #c9a265; color: #000; padding: 8px 16px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                                    <i class="fa-solid fa-truck-fast"></i> Consultar Pedido ${folioTag}
-                                </button>
-                            ` : ''}
-                        </div>
-                    `;
-                    alertBox.className = 'auth-msg success';
-                    alertBox.style.display = 'block';
-                }
+            if (orderStatus === 'mp_success' || orderStatus === 'mp_pending') {
+                await showOrderConfirmationScreen(urlOrderId, orderStatus);
+                return;
             } else if (targetTab) {
                 switchProfileTab(targetTab);
             }
 
             await checkUserSession(orderStatus);
         });
+
+        async function showOrderConfirmationScreen(orderId, orderStatus) {
+            const wrapper = document.querySelector('.profile-wrapper');
+            const confView = document.getElementById('orderConfirmationView');
+            if (wrapper) wrapper.style.display = 'none';
+            if (confView) confView.style.display = 'block';
+
+            const confHeaderIcon = document.getElementById('confHeaderIcon');
+            const confTitle = document.getElementById('confTitle');
+            const confSubtitle = document.getElementById('confSubtitle');
+            const confFolio = document.getElementById('confFolio');
+            const confPayStatus = document.getElementById('confPayStatus');
+            const confShipStatus = document.getElementById('confShipStatus');
+            const confAddress = document.getElementById('confAddress');
+            const confItemsList = document.getElementById('confItemsList');
+            const confGrandTotal = document.getElementById('confGrandTotal');
+
+            const folioStr = orderId ? `#PED-${orderId}` : 'Confirmado';
+            if (confFolio) confFolio.textContent = folioStr;
+
+            if (orderStatus === 'mp_success') {
+                if (confHeaderIcon) {
+                    confHeaderIcon.style.background = 'rgba(52, 211, 153, 0.15)';
+                    confHeaderIcon.style.borderColor = '#34d399';
+                    confHeaderIcon.style.boxShadow = '0 0 25px rgba(52, 211, 153, 0.3)';
+                    confHeaderIcon.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size: 38px; color: #34d399;"></i>`;
+                }
+                if (confTitle) confTitle.textContent = '¡Pedido Confirmado y Pago Aprobado!';
+                if (confSubtitle) confSubtitle.textContent = '¡Gracias por tu compra! Tu pago se acreditó exitosamente y estamos preparando tu paquete.';
+                if (confPayStatus) {
+                    confPayStatus.textContent = 'Aprobado (Mercado Pago)';
+                    confPayStatus.style.color = '#34d399';
+                }
+            } else if (orderStatus === 'mp_pending') {
+                if (confHeaderIcon) {
+                    confHeaderIcon.style.background = 'rgba(251, 191, 36, 0.15)';
+                    confHeaderIcon.style.borderColor = '#fbbf24';
+                    confHeaderIcon.style.boxShadow = '0 0 25px rgba(251, 191, 36, 0.3)';
+                    confHeaderIcon.innerHTML = `<i class="fa-solid fa-clock" style="font-size: 38px; color: #fbbf24;"></i>`;
+                }
+                if (confTitle) confTitle.textContent = '¡Pedido Registrado - Pago Pendiente!';
+                if (confSubtitle) confSubtitle.textContent = 'Tu pago está en proceso de acreditación (OXXO / SPEI). Tu pedido pasará a preparación en cuanto se confirme el depósito.';
+                if (confPayStatus) {
+                    confPayStatus.textContent = 'Pendiente de Acreditación (OXXO/SPEI)';
+                    confPayStatus.style.color = '#fbbf24';
+                }
+            }
+
+            if (!orderId) {
+                if (confAddress) confAddress.textContent = 'Pedido registrado con éxito.';
+                if (confGrandTotal) confGrandTotal.textContent = '$0.00';
+                return;
+            }
+
+            try {
+                if (!supabaseClient && typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+
+                const cleanId = String(orderId).replace(/\D/g, '');
+                const { data, error } = await supabaseClient.from('pedidos_web').select('*').eq('id', cleanId);
+
+                if (error || !data || data.length === 0) {
+                    if (confAddress) confAddress.textContent = 'Pedido registrado exitosamente.';
+                    return;
+                }
+
+                const p = data[0];
+
+                if (confAddress) {
+                    confAddress.innerHTML = `
+                        <div style="line-height: 1.6;">
+                            <div><strong>Cliente:</strong> ${p.cliente_nombre || 'Cliente'}</div>
+                            <div><strong>Teléfono:</strong> ${p.telefono || 'N/A'}</div>
+                            <div><strong>Dirección:</strong> ${p.direccion_envio || 'Recoger en Tienda'}</div>
+                            <div><strong>Paquetería Elegida:</strong> ${p.paqueteria || p.metodo_envio || 'Estafeta Express'}</div>
+                        </div>
+                    `;
+                }
+
+                if (confShipStatus) {
+                    const trackingNum = p.numero_guia || p.numero_rastreo || p.guia || '';
+                    if (trackingNum) {
+                        confShipStatus.innerHTML = `<span style="color: #60a5fa;">Enviado (${p.paqueteria || 'Estafeta'})</span> — Guía: <strong style="color: #fff;">${trackingNum}</strong>`;
+                    } else {
+                        confShipStatus.innerHTML = `<span style="color: #fbbf24;">En Preparación</span> (Guía en proceso de asignación)`;
+                    }
+                }
+
+                let items = [];
+                if (Array.isArray(p.detalles_pedido)) {
+                    items = p.detalles_pedido;
+                } else if (typeof p.detalles_pedido === 'string') {
+                    try { items = JSON.parse(p.detalles_pedido); } catch (e) { }
+                }
+
+                if (confItemsList) {
+                    confItemsList.innerHTML = items.map(it => `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <img src="${it.imagen_url || it.imagen || 'logo-imperial.jpg'}" style="width: 46px; height: 46px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);" />
+                                <div>
+                                    <div style="font-weight: 700; font-size: 14px; color: #ffffff;">${it.nombre || 'Producto'}</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Talla: ${it.talla || 'Única'} | Cantidad: ${it.cantidad || 1}</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 800; font-size: 14px; color: #c9a265;">$${(Number(it.precio || it.precioVenta || it.precioUnitario || 0) * (Number(it.cantidad) || 1)).toFixed(2)}</div>
+                        </div>
+                    `).join('') || '<div style="color:rgba(255,255,255,0.5); font-size:13px;">Prendas registradas en la orden.</div>';
+                }
+
+                if (confGrandTotal) {
+                    confGrandTotal.textContent = `$${Number(p.total || 0).toFixed(2)}`;
+                }
+
+            } catch (err) {
+                console.error("Error al cargar datos de confirmación:", err);
+            }
+        }
 
         async function checkUserSession(orderStatus = null) {
             if (!supabaseClient) {
