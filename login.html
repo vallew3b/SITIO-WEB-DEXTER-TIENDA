@@ -420,32 +420,41 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Entrando...`;
 
-            if (supabaseClient) {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+            try {
+                if (supabaseClient) {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
 
-                if (error) {
-                    let msg = error.message || 'Error al iniciar sesión. Revisa tus credenciales.';
-                    if (msg.includes('Invalid login credentials')) {
-                        msg = '⚠️ Correo electrónico o contraseña incorrectos. Por favor, verifica tus datos.';
+                    if (error) {
+                        let msg = error.message || 'Error al iniciar sesión. Revisa tus credenciales.';
+                        if (msg.includes('Invalid login credentials')) {
+                            msg = '⚠️ Correo electrónico o contraseña incorrectos. Por favor, verifica tus datos.';
+                        } else if (msg.includes('Email not confirmed')) {
+                            msg = '⚠️ Tu correo electrónico aún no ha sido confirmado. Por favor revisa tu bandeja de entrada.';
+                        }
+                        showAlert(msg, true);
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Entrar a mi Cuenta</span> <i class="fa-solid fa-arrow-right"></i>`;
+                        return;
                     }
-                    showAlert(msg, true);
-                    btn.disabled = false;
-                    btn.innerHTML = `<span>Entrar a mi Cuenta</span> <i class="fa-solid fa-arrow-right"></i>`;
-                    return;
-                }
 
-                showAlert('¡Sesión iniciada con éxito! Redirigiendo a tu perfil...', false);
-                setTimeout(() => {
-                    window.location.href = 'perfil.html';
-                }, 1200);
-            } else {
-                showAlert('¡Bienvenido! (Modo demostración)', false);
-                setTimeout(() => {
-                    window.location.href = 'perfil.html';
-                }, 1200);
+                    showAlert('¡Sesión iniciada con éxito! Redirigiendo a tu perfil...', false);
+                    setTimeout(() => {
+                        window.location.href = 'perfil.html';
+                    }, 1200);
+                } else {
+                    showAlert('¡Bienvenido! (Modo demostración)', false);
+                    setTimeout(() => {
+                        window.location.href = 'perfil.html';
+                    }, 1200);
+                }
+            } catch (err) {
+                console.error("Error inesperado en handleLogin:", err);
+                showAlert('⚠️ Ocurrió un error inesperado al iniciar sesión. Por favor, intenta de nuevo.', true);
+                btn.disabled = false;
+                btn.innerHTML = `<span>Entrar a mi Cuenta</span> <i class="fa-solid fa-arrow-right"></i>`;
             }
         }
 
@@ -508,68 +517,75 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando...`;
 
-            if (supabaseClient) {
-                // 1. Crear usuario en Supabase Auth
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            nombre_completo: nombre,
-                            telefono: telefono
+            try {
+                if (supabaseClient) {
+                    // 1. Crear usuario en Supabase Auth
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                nombre_completo: nombre,
+                                telefono: telefono
+                            }
                         }
-                    }
-                });
+                    });
 
-                if (error) {
-                    let msg = error.message || 'Error al crear la cuenta.';
-                    const lowerMsg = msg.toLowerCase();
-                    if (error.code === 'user_already_exists' || lowerMsg.includes('already registered') || lowerMsg.includes('already in use') || lowerMsg.includes('already exists') || lowerMsg.includes('registrado')) {
-                        msg = '⚠️ Este correo electrónico ya tiene una cuenta registrada. Por favor, inicia sesión con tu contraseña o usa otro correo.';
-                    } else if (error.code === 'email_provider_disabled' || lowerMsg.includes('disabled')) {
-                        msg = 'El registro por correo está desactivado en Supabase. Ve a Authentication -> Sign In / Providers -> Email y actívalo (Enabled).';
-                    }
-                    showAlert(msg, true);
-                    btn.disabled = false;
-                    btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
-                    return;
-                }
-
-                // 2. Insertar datos del cliente en la tabla 'clientes'
-                if (data.user) {
-                    const { error: dbError } = await supabaseClient.from('clientes').insert([
-                        {
-                            id: data.user.id,
-                            nombre_completo: nombre,
-                            telefono: telefono,
-                            email: email
+                    if (error) {
+                        let msg = error.message || 'Error al crear la cuenta.';
+                        const lowerMsg = msg.toLowerCase();
+                        if (error.code === 'user_already_exists' || lowerMsg.includes('already registered') || lowerMsg.includes('already in use') || lowerMsg.includes('already exists') || lowerMsg.includes('registrado')) {
+                            msg = '⚠️ Este correo electrónico ya tiene una cuenta registrada. Por favor, inicia sesión con tu contraseña o usa otro correo.';
+                        } else if (error.code === 'email_provider_disabled' || lowerMsg.includes('disabled')) {
+                            msg = 'El registro por correo está desactivado en Supabase. Ve a Authentication -> Sign In / Providers -> Email y actívalo (Enabled).';
                         }
-                    ]);
-
-                    if (dbError) {
-                        console.error("Error al insertar en la tabla clientes:", dbError);
-                        let dbMsg = dbError.message || '';
-                        if (dbError.code === '23505' || dbMsg.includes('unique') || dbMsg.includes('already exists') || dbMsg.includes('clientes_email_unique')) {
-                            dbMsg = '⚠️ Este correo electrónico ya está registrado en nuestro sistema. Por favor, inicia sesión con tu cuenta.';
-                        } else {
-                            dbMsg = `Aviso al guardar cliente: ${dbMsg}`;
-                        }
-                        showAlert(dbMsg, true);
+                        showAlert(msg, true);
                         btn.disabled = false;
                         btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
                         return;
                     }
-                }
 
-                showAlert('¡Registro exitoso! Tu cuenta ha sido creada.', false);
-                setTimeout(() => {
-                    window.location.href = 'perfil.html';
-                }, 1500);
-            } else {
-                showAlert('¡Registro exitoso! (Modo demostración)', false);
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+                    // 2. Insertar datos del cliente en la tabla 'clientes'
+                    if (data.user) {
+                        const { error: dbError } = await supabaseClient.from('clientes').insert([
+                            {
+                                id: data.user.id,
+                                nombre_completo: nombre,
+                                telefono: telefono,
+                                email: email
+                            }
+                        ]);
+
+                        if (dbError) {
+                            console.error("Error al insertar en la tabla clientes:", dbError);
+                            let dbMsg = dbError.message || '';
+                            if (dbError.code === '23505' || dbMsg.includes('unique') || dbMsg.includes('already exists') || dbMsg.includes('clientes_email_unique')) {
+                                dbMsg = '⚠️ Este correo electrónico ya está registrado en nuestro sistema. Por favor, inicia sesión con tu cuenta.';
+                            } else {
+                                dbMsg = `Aviso al guardar cliente: ${dbMsg}`;
+                            }
+                            showAlert(dbMsg, true);
+                            btn.disabled = false;
+                            btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
+                            return;
+                        }
+                    }
+
+                    showAlert('¡Registro exitoso! Tu cuenta ha sido creada.', false);
+                    setTimeout(() => {
+                        window.location.href = 'perfil.html';
+                    }, 1500);
+                } else {
+                    showAlert('¡Registro exitoso! (Modo demostración)', false);
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+            } catch (err) {
+                console.error("Error inesperado en handleRegister:", err);
+                showAlert('⚠️ Ocurrió un error inesperado al registrar la cuenta. Inténtalo de nuevo.', true);
+                btn.disabled = false;
+                btn.innerHTML = `<span>Registrarme Ahora</span> <i class="fa-solid fa-user-plus"></i>`;
             }
         }
     </script>
