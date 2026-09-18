@@ -1344,6 +1344,253 @@ window.addToCartFromDetails = (productId, variantId) => {
     const variant = product.variantes.find(v => v.id === variantId);
     if (product && variant) {
         addToCart(product, variant);
-        // Opcional: no cerrar detalles para permitir seguir viendo, solo dar feedback
     }
 };
+
+// ==================================================
+// LÓGICA DE RASTREO DE PEDIDO (CONSULTA SIN CUENTA)
+// ==================================================
+
+function ensureTrackModalDOM() {
+    if (document.getElementById('trackOrderModalOverlay')) return;
+
+    const modalHTML = `
+        <div class="track-modal-overlay" id="trackOrderModalOverlay" onclick="if(event.target === this) closeTrackOrderModal()">
+            <div class="track-modal-card">
+                <div class="track-modal-header">
+                    <h3 class="track-modal-title">
+                        <i class="fa-solid fa-truck-fast" style="color: #c9a265;"></i>
+                        Rastrear Mi Pedido (Sin Cuenta)
+                    </h3>
+                    <button class="track-modal-close" onclick="closeTrackOrderModal()">&times;</button>
+                </div>
+                <div class="track-modal-body">
+                    <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px; line-height: 1.5;">
+                        Ingresa tu <strong>Número de Teléfono (10 dígitos)</strong> o tu <strong>Folio de Pedido</strong> (ej. 105) para consultar el estatus en tiempo real.
+                    </p>
+                    <div class="track-search-box">
+                        <input type="text" id="trackSearchInput" class="track-search-input" placeholder="Ej. 7341234567 o #PED-105" onkeyup="if(event.key === 'Enter') searchGuestOrder()">
+                        <button class="track-search-btn" id="trackSearchBtn" onclick="searchGuestOrder()">
+                            <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                        </button>
+                    </div>
+                    <div id="trackOrderResults"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+window.openTrackOrderModal = (initialTerm = '') => {
+    ensureTrackModalDOM();
+    const overlay = document.getElementById('trackOrderModalOverlay');
+    const input = document.getElementById('trackSearchInput');
+    if (overlay) {
+        overlay.classList.add('active');
+        if (input) {
+            if (initialTerm) input.value = initialTerm;
+            input.focus();
+            if (initialTerm) searchGuestOrder();
+        }
+    }
+};
+
+window.closeTrackOrderModal = () => {
+    const overlay = document.getElementById('trackOrderModalOverlay');
+    if (overlay) overlay.classList.remove('active');
+};
+
+window.searchGuestOrder = async () => {
+    const inputEl = document.getElementById('trackSearchInput');
+    const resultsContainer = document.getElementById('trackOrderResults');
+    const btn = document.getElementById('trackSearchBtn');
+
+    if (!inputEl || !resultsContainer) return;
+    const rawVal = inputEl.value.trim();
+    if (!rawVal) {
+        resultsContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 22px; margin-bottom: 6px;"></i>
+                <p style="margin:0; font-size: 13px;">Por favor ingresa un número de teléfono o folio para buscar.</p>
+            </div>
+        `;
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Buscando...`;
+    }
+
+    resultsContainer.innerHTML = `
+        <div style="text-align: center; padding: 36px; color: rgba(255,255,255,0.6);">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: #c9a265; margin-bottom: 12px;"></i>
+            <p style="margin: 0; font-size: 14px;">Consultando pedidos en el sistema...</p>
+        </div>
+    `;
+
+    try {
+        if (!supabaseClient && typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
+        if (!supabaseClient) {
+            throw new Error("No se pudo inicializar la conexión con el servidor.");
+        }
+
+        const digitsOnly = rawVal.replace(/\D/g, '');
+
+        let query = supabaseClient.from('pedidos_web').select('*').eq('comercio_id', 111);
+
+        if (digitsOnly.length === 10) {
+            query = query.or(`telefono.eq.${digitsOnly},telefono.ilike.%${digitsOnly}%`);
+        } else if (digitsOnly.length > 0) {
+            query = query.or(`id.eq.${digitsOnly},telefono.ilike.%${digitsOnly}%`);
+        } else {
+            query = query.ilike('cliente_nombre', `%${rawVal}%`);
+        }
+
+        const { data, error } = await query.order('id', { ascending: false });
+
+        if (error) {
+            console.error("Error al buscar pedido:", error);
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; padding: 30px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.15); border-radius: 14px;">
+                    <i class="fa-solid fa-magnifying-glass" style="font-size: 36px; color: rgba(255,255,255,0.3); margin-bottom: 12px;"></i>
+                    <p style="color: #ffffff; font-weight: 600; font-size: 15px; margin-bottom: 6px;">No se encontró ningún pedido</p>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 13px; max-width: 400px; margin: 0 auto 16px auto;">
+                        Verifica que el número de teléfono o folio sea correcto. Si tienes dudas, contáctanos directamente por WhatsApp.
+                    </p>
+                    <a href="https://wa.me/527341439779?text=${encodeURIComponent('Hola, necesito ayuda para rastrear mi pedido. Mis datos: ' + rawVal)}" target="_blank" class="track-search-btn" style="display: inline-flex; width: auto; background: #25D366; color: #000; text-decoration: none; margin: 0 auto;">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i> Ayuda por WhatsApp
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        resultsContainer.innerHTML = data.map(p => {
+            const st = (p.estado || 'pendiente').toLowerCase();
+            let stText = 'Pendiente';
+            let stBadgeStyle = 'background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);';
+
+            if (st.includes('anulado') || st.includes('cancelado') || st.includes('denegado') || st.includes('rechazado')) {
+                stText = 'Cancelado';
+                stBadgeStyle = 'background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);';
+            } else if (st.includes('enviado') || st.includes('proceso') || st.includes('despachado')) {
+                stText = 'Enviado';
+                stBadgeStyle = 'background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);';
+            } else if (st.includes('completado') || st.includes('entregado') || st.includes('pagado') || st.includes('confirmado') || st.includes('aprobado')) {
+                stText = 'Completado / Pagado';
+                stBadgeStyle = 'background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3);';
+            }
+
+            const dateStr = p.created_at ? new Date(p.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Reciente';
+
+            const trackingNum = p.numero_guia || p.numero_rastreo || p.guia || p.tracking_number || '';
+            const carrier = p.paqueteria || p.metodo_envio || 'Estafeta';
+
+            let carrierUrl = 'https://www.correosdemexico.gob.mx/SSLServicios/SeguimientoEnvio/Seguimiento.aspx';
+            const carrierLower = carrier.toLowerCase();
+            if (carrierLower.includes('estafeta')) {
+                carrierUrl = 'https://www.estafeta.com/Rastreo/';
+            } else if (carrierLower.includes('dhl')) {
+                carrierUrl = trackingNum ? `https://www.dhl.com/es-mx/home/rastreo.html?tracking-id=${encodeURIComponent(trackingNum)}` : 'https://www.dhl.com/es-mx/home/rastreo.html';
+            } else if (carrierLower.includes('fedex')) {
+                carrierUrl = trackingNum ? `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(trackingNum)}` : 'https://www.fedex.com/fedextrack/';
+            }
+
+            let items = [];
+            if (Array.isArray(p.detalles_pedido)) {
+                items = p.detalles_pedido;
+            } else if (typeof p.detalles_pedido === 'string') {
+                try { items = JSON.parse(p.detalles_pedido); } catch (e) { }
+            }
+
+            const itemsHTML = items.map(it => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="${it.imagen_url || it.imagen || 'logo-imperial.jpg'}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);" />
+                        <div>
+                            <div style="font-weight: 600; font-size: 13px; color: #fff;">${it.nombre || 'Producto'}</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Talla: ${it.talla || 'Única'} | Cant: ${it.cantidad || 1}</div>
+                        </div>
+                    </div>
+                    <div style="font-weight: 700; font-size: 13px; color: #c9a265;">$${(Number(it.precio || it.precioVenta || it.precioUnitario || 0) * (Number(it.cantidad) || 1)).toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            const waText = encodeURIComponent(`Hola Imperial Design, quisiera consultar el estatus de mi pedido #PED-${p.id} a nombre de ${p.cliente_nombre || 'Cliente'}.`);
+
+            return `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(201, 162, 101, 0.3); border-radius: 16px; padding: 18px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                        <div>
+                            <span style="font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">#PED-${p.id}</span>
+                            <span style="font-size: 12px; color: rgba(255,255,255,0.5); display: block;">${dateStr}</span>
+                        </div>
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; ${stBadgeStyle}">
+                            ${stText}
+                        </span>
+                    </div>
+
+                    <div style="font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 10px; line-height: 1.6;">
+                        <div><strong>Cliente:</strong> ${p.cliente_nombre || 'Sin nombre'}</div>
+                        <div><strong>Teléfono:</strong> ${p.telefono || 'Sin teléfono'}</div>
+                        <div><strong>Envío:</strong> ${p.paqueteria || p.metodo_envio || 'Estafeta Express'}</div>
+                        <div><strong>Dirección:</strong> ${p.direccion_envio || 'Recoger en tienda'}</div>
+                    </div>
+
+                    ${trackingNum ? `
+                        <div style="background: rgba(201, 162, 101, 0.1); border: 1px solid rgba(201, 162, 101, 0.3); border-radius: 10px; padding: 10px 14px; margin: 12px 0;">
+                            <div style="font-size: 11px; color: #c9a265; font-weight: 700; text-transform: uppercase;">Guía de Rastreo (${carrier}):</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; flex-wrap: wrap; gap: 6px;">
+                                <span style="font-weight: 700; font-size: 14px; color: #fff; font-family: monospace;">${trackingNum}</span>
+                                <a href="${carrierUrl}" target="_blank" style="background: #c9a265; color: #000; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none;">Rastrear Guía &rarr;</a>
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.4); font-style: italic; margin: 8px 0;">
+                            ℹ️ Guía de paquetería pendiente de asignación por el vendedor.
+                        </div>
+                    `}
+
+                    <div style="margin-top: 10px;">
+                        <div style="font-size: 12px; color: #c9a265; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Productos:</div>
+                        ${itemsHTML || '<div style="font-size:12px; color:rgba(255,255,255,0.5);">Detalles en proceso</div>'}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <span style="font-size: 12px; color: rgba(255,255,255,0.5);">Total del Pedido:</span>
+                            <span style="font-size: 18px; font-weight: 800; color: #c9a265; display: block;">$${Number(p.total || 0).toFixed(2)}</span>
+                        </div>
+                        <a href="https://wa.me/527341439779?text=${waText}" target="_blank" style="background: rgba(37, 211, 102, 0.15); border: 1px solid rgba(37, 211, 102, 0.4); color: #25D366; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-brands fa-whatsapp"></i> Ayuda sobre Pedido
+                        </a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error("Error en búsqueda:", err);
+        resultsContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #ef4444; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 22px; margin-bottom: 6px;"></i>
+                <p style="margin: 0; font-size: 13px;">Ocurrió un problema al consultar el pedido: ${err.message || err}</p>
+            </div>
+        `;
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Buscar`;
+        }
+    }
+};
+

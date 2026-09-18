@@ -94,6 +94,9 @@
                         <i class="fa-solid fa-fire" style="color: #e63946;"></i> LO NUEVO
                     </button>
                     <a href="#newProductsSection" class="sub-nav-link">DESTACADOS</a>
+                    <button type="button" class="sub-nav-link" onclick="openTrackOrderModal()" style="background: none; border: none; font-family: inherit; font-size: inherit; cursor: pointer;">
+                        <i class="fa-solid fa-truck-fast" style="color: #c9a265;"></i> RASTREAR PEDIDO
+                    </button>
                     <a href="#storeFooter" class="sub-nav-link">CONTACTO</a>
                 </div>
             </nav>
@@ -115,6 +118,9 @@
                             <span class="dropdown-user-email" id="dropdownUserEmail">Sesión</span>
                         </div>
                         <div id="dropdownAuthLinks">
+                            <a href="#" onclick="openTrackOrderModal(); return false;" class="dropdown-item" style="color: #c9a265; font-weight: 600;">
+                                <i class="fa-solid fa-truck-fast"></i> Rastrear Pedido (Sin cuenta)
+                            </a>
                             <a href="perfil.html?tab=datos" class="dropdown-item">
                                 <i class="fa-solid fa-location-dot"></i> Dirección y Domicilio
                             </a>

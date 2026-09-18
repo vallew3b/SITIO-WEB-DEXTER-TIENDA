@@ -564,7 +564,9 @@
                     <button class="profile-menu-btn" id="tabMenuPedidos" onclick="switchProfileTab('pedidos')">
                         <i class="fa-solid fa-box-open"></i> Mis Pedidos Realizados
                     </button>
-
+                    <button class="profile-menu-btn" onclick="openTrackOrderModal()" style="color: #c9a265; border-color: rgba(201,162,101,0.3);">
+                        <i class="fa-solid fa-truck-fast"></i> Rastrear Pedido (Sin Cuenta)
+                    </button>
                 </nav>
 
                 <button class="btn-logout" onclick="handleLogout()">
@@ -1419,6 +1421,7 @@
             window.location.href = 'index.html';
         }
     </script>
+    <script src="store.js?v=8.0"></script>
 </body>
 
 </html>
