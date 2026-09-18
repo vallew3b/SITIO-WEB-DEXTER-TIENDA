@@ -1159,11 +1159,11 @@
                         body: JSON.stringify(mpBody)
                     });
 
-                    const data = await res.json();
+                    const redirectUrl = data.init_point || data.sandbox_init_point;
 
-                    if (data.init_point) {
+                    if (redirectUrl) {
                         localStorage.removeItem('imperial_cart');
-                        window.location.href = data.init_point;
+                        window.location.href = redirectUrl;
                         return;
                     } else {
                         console.error("Error Mercado Pago API:", data);
