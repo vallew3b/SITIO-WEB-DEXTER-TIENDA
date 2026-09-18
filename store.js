@@ -149,21 +149,6 @@ async function updateUserDropdownUI() {
                 if (emailEl) emailEl.textContent = user.email || 'Sesión Activa';
                 if (logoutBtn) logoutBtn.style.display = 'flex';
 
-                // Sincronizar Favoritos Nube <-> Local por Usuario Autenticado
-                localStorage.removeItem('imperial_favs_guest');
-                const userKey = `imperial_favs_${user.id}`;
-                const cloudFavs = user.user_metadata?.favoritos || [];
-                let localFavs = [];
-                try { localFavs = JSON.parse(localStorage.getItem(userKey)) || []; } catch (e) { }
-
-                const combinedFavs = [...new Set([...cloudFavs, ...localFavs])];
-                localStorage.setItem(userKey, JSON.stringify(combinedFavs));
-
-                if (JSON.stringify(combinedFavs) !== JSON.stringify(cloudFavs)) {
-                    await supabaseClient.auth.updateUser({ data: { favoritos: combinedFavs } });
-                }
-
-                updateFavoritesBadge();
                 return;
             }
         } catch (e) { }
@@ -172,7 +157,6 @@ async function updateUserDropdownUI() {
     if (nameEl) nameEl.textContent = 'Mi Cuenta';
     if (emailEl) emailEl.textContent = 'Iniciar Sesión / Registro';
     if (logoutBtn) logoutBtn.style.display = 'none';
-    updateFavoritesBadge();
 }
 
 window.handleGlobalLogout = async () => {
@@ -605,23 +589,7 @@ function setupEvents() {
         });
     }
 
-    // ==========================================
-    // BOTÓN DE FAVORITOS Y PERFIL/CONTACTO
-    // ==========================================
-    const wishlistBtn = document.getElementById('wishlistBtn');
-    if (wishlistBtn) {
-        wishlistBtn.addEventListener('click', () => {
-            const uid = getFavoritesStorageKey();
-            if (!uid) {
-                showToast("Iniciar Sesión", "Inicia sesión para guardar y ver tus favoritos.", "info");
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1000);
-            } else {
-                window.location.href = 'perfil.html?tab=favoritos';
-            }
-        });
-    }
+
 
     const userBtn = document.getElementById('userBtn');
     if (userBtn) {
@@ -841,101 +809,11 @@ function filterCatalog() {
     renderCatalog();
 }
 
-// ==================================================
-// GESTIÓN DE FAVORITOS (EXCLUSIVOS POR CUENTA AUTENTICADA)
-// ==================================================
-function getFavoritesStorageKey() {
-    try {
-        // Limpiar restos de clave antigua 'guest' si existe
-        if (localStorage.getItem('imperial_favs_guest')) {
-            localStorage.removeItem('imperial_favs_guest');
-        }
-        for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && (k.includes('auth-token') || k.includes('supabase.auth'))) {
-                const val = localStorage.getItem(k);
-                if (val && val.includes('"id"')) {
-                    const parsed = JSON.parse(val);
-                    const uid = parsed?.user?.id || parsed?.currentSession?.user?.id;
-                    if (uid) return `imperial_favs_${uid}`;
-                }
-            }
-        }
-    } catch (e) { }
-    return null; // Sin usuario autenticado -> 0 favoritos
-}
 
-function getFavorites() {
-    const key = getFavoritesStorageKey();
-    if (!key) return []; // Si no hay cuenta abierta, siempre es 0
-    try {
-        return JSON.parse(localStorage.getItem(key)) || [];
-    } catch (e) { }
-    return [];
-}
-
-async function saveFavorites(favs) {
-    const key = getFavoritesStorageKey();
-    if (!key) return;
-    localStorage.setItem(key, JSON.stringify(favs));
-    updateFavoritesBadge();
-
-    if (supabaseClient && supabaseClient.auth) {
-        try {
-            await supabaseClient.auth.updateUser({
-                data: { favoritos: favs }
-            });
-        } catch (e) {
-            console.log("Aviso guardando favoritos en Supabase:", e);
-        }
-    }
-}
-
-function isFavorite(productId) {
-    return getFavorites().some(fid => String(fid) === String(productId));
-}
-
-function toggleFavorite(event, productId) {
-    if (event) event.stopPropagation();
-
-    const key = getFavoritesStorageKey();
-    if (!key) {
-        showToast("Iniciar Sesión Required", "Debes iniciar sesión para guardar productos en tus favoritos.", "info");
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1200);
-        return;
-    }
-
-    let favs = getFavorites();
-    const index = favs.findIndex(fid => String(fid) === String(productId));
-
-    if (index > -1) {
-        favs.splice(index, 1);
-        showToast("Favoritos", "Producto eliminado de tus favoritos.", "info");
-    } else {
-        favs.push(productId);
-        showToast("Favoritos", "¡Producto guardado en tus favoritos! ❤️", "success");
-    }
-
-    saveFavorites(favs);
-    renderCatalog();
-    renderNewProducts();
-}
-
-function updateFavoritesBadge() {
-    const favs = getFavorites();
-    const badge = document.getElementById('wishlistCount');
-    if (badge) {
-        badge.textContent = favs.length;
-        badge.style.display = favs.length > 0 ? 'inline-flex' : 'none';
-    }
-}
 
 // Generar HTML de la tarjeta de producto
 function generateProductCardHTML(p) {
     const hasStock = p.stock > 0;
-    const isFav = isFavorite(p.id);
 
     const mainImg = p.imagen_url
         ? `<img src="${p.imagen_url}" alt="${p.nombre}" class="product-image">`
@@ -944,12 +822,6 @@ function generateProductCardHTML(p) {
     const badge = hasStock
         ? `<span class="product-badge badge-tag">${p.categoria}</span>`
         : `<span class="product-badge badge-out-of-stock">Agotado</span>`;
-
-    const favBtn = `
-        <button class="favorite-card-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, ${p.id})" title="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
-            <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-        </button>
-    `;
 
     // Extraer tallas únicas de las variantes en stock
     const uniqueSizes = p.variantes && p.variantes.length > 0
@@ -979,7 +851,6 @@ function generateProductCardHTML(p) {
         <div class="product-card">
             <div class="product-image-container product-clickable" onclick="openDetailModal(${p.id})">
                 ${badge}
-                ${favBtn}
                 ${mainImg}
             </div>
             <div class="product-info">

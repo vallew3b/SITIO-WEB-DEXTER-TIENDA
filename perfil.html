@@ -564,9 +564,7 @@
                     <button class="profile-menu-btn" id="tabMenuPedidos" onclick="switchProfileTab('pedidos')">
                         <i class="fa-solid fa-box-open"></i> Mis Pedidos Realizados
                     </button>
-                    <button class="profile-menu-btn" id="tabMenuFavoritos" onclick="switchProfileTab('favoritos')">
-                        <i class="fa-solid fa-heart"></i> Mis Prendas Favoritas
-                    </button>
+
                 </nav>
 
                 <button class="btn-logout" onclick="handleLogout()">
@@ -670,19 +668,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: MIS FAVORITOS -->
-                <div id="tabContentFavoritos" class="profile-tab-content">
-                    <h2 class="profile-section-title">
-                        <i class="fa-solid fa-heart" style="color: #e63946;"></i> Mis Prendas Favoritas
-                    </h2>
 
-                    <div id="favoritesListContainer">
-                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
-                            <i class="fa-solid fa-heart" style="font-size: 32px; color: rgba(230,57,70,0.5); margin-bottom: 12px;"></i>
-                            <p>Guarda prendas favoritas desde el catálogo para visualizarlas aquí.</p>
-                        </div>
-                    </div>
-                </div>
 
             </section>
         </div>
@@ -820,28 +806,9 @@
 
             currentUser = user;
 
-            // Sincronización en tiempo real desde Supabase Cloud (Celular / Laptop)
-            try {
-                localStorage.removeItem('imperial_favs_guest');
-                const userKey = `imperial_favs_${user.id}`;
-                const cloudFavs = user.user_metadata?.favoritos || [];
-                let localFavs = [];
-                try { localFavs = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
-
-                const combinedFavs = [...new Set([...cloudFavs, ...localFavs])];
-                localStorage.setItem(userKey, JSON.stringify(combinedFavs));
-
-                if (JSON.stringify(combinedFavs) !== JSON.stringify(cloudFavs)) {
-                    await supabaseClient.auth.updateUser({ data: { favoritos: combinedFavs } });
-                }
-            } catch(e) {
-                console.log("Aviso sincronizando favoritos en perfil:", e);
-            }
-
             renderUserHeaderInfo();
             await loadProfileData();
             await loadUserOrders();
-            await loadUserFavorites();
         }
 
         function renderUserHeaderInfo() {
@@ -1430,137 +1397,6 @@
 
 
 
-        async function loadUserFavorites() {
-            const container = document.getElementById('favoritesListContainer');
-            if (!container) return;
-
-            localStorage.removeItem('imperial_favs_guest');
-
-            if (!currentUser || !currentUser.id) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
-                        <i class="fa-solid fa-heart-crack" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
-                        <p>Inicia sesión para ver tus prendas favoritas.</p>
-                        <a href="login.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
-                            Iniciar Sesión
-                        </a>
-                    </div>
-                `;
-                return;
-            }
-
-            const userKey = `imperial_favs_${currentUser.id}`;
-            let favIds = [];
-            try { favIds = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
-            if ((!favIds || favIds.length === 0) && currentUser.user_metadata?.favoritos) {
-                favIds = currentUser.user_metadata.favoritos || [];
-                try { localStorage.setItem(userKey, JSON.stringify(favIds)); } catch(e) {}
-            }
-
-            if (!favIds || favIds.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
-                        <i class="fa-solid fa-heart-crack" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
-                        <p>Aún no tienes prendas guardadas en tus favoritos.</p>
-                        <a href="index.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
-                            Explorar Catálogo
-                        </a>
-                    </div>
-                `;
-                return;
-            }
-
-            try {
-                let allCatalogProducts = [];
-
-                // 1. Obtener los productos reales desde Supabase
-                if (supabaseClient) {
-                    try {
-                        const { data } = await supabaseClient.from('productos').select('*, variantes(*)').eq('comercio_id', 111);
-                        if (data && data.length > 0) {
-                            allCatalogProducts = data;
-                        }
-                    } catch (err) {
-                        console.log("Aviso leyendo catálogo para favoritos:", err);
-                    }
-                }
-
-                // 2. Fusionar con productos de respaldo para asegurar compatibilidad total
-                const catalogIds = allCatalogProducts.map(p => String(p.id));
-                FALLBACK_PRODUCTS.forEach(fp => {
-                    if (!catalogIds.includes(String(fp.id))) {
-                        allCatalogProducts.push(fp);
-                    }
-                });
-
-                // 3. Filtrar favoritos del usuario actual
-                const productsData = allCatalogProducts.filter(p => 
-                    favIds.some(fid => String(fid) === String(p.id))
-                );
-
-                if (productsData.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">
-                            <i class="fa-solid fa-heart-crack" style="font-size: 38px; margin-bottom: 14px; color: #c9a265;"></i>
-                            <p>No se encontraron productos disponibles en el catálogo para tus favoritos guardados.</p>
-                            <a href="index.html" class="btn-submit-auth" style="margin: 18px auto 0 auto; max-width: 220px; text-decoration: none;">
-                                Explorar Catálogo
-                            </a>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
-                        ${productsData.map(p => `
-                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 16px; position: relative; display: flex; flex-direction: column; justify-content: space-between;">
-                                <div>
-                                    <img src="${p.imagen_url || 'logo-imperial.jpg'}" alt="${p.nombre}" style="width: 100%; aspect-ratio: 1/1; object-fit: contain; border-radius: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.05);">
-                                    <div style="font-size: 11px; font-weight: 700; color: #c9a265; text-transform: uppercase;">${p.categoria || 'GENERAL'}</div>
-                                    <div style="font-size: 14px; font-weight: 800; color: #ffffff; margin: 4px 0 8px 0; line-height: 1.3;">${p.nombre}</div>
-                                    <div style="font-size: 16px; font-weight: 900; color: #ffffff;">$${(p.precio_venta || p.precioVenta || 0).toFixed(2)}</div>
-                                </div>
-                                <div style="display: flex; gap: 8px; margin-top: 14px;">
-                                    <a href="index.html" class="btn-submit-auth" style="padding: 8px 12px; font-size: 12px; flex: 1; text-decoration: none; text-align: center;">
-                                        <i class="fa-solid fa-cart-shopping"></i> Comprar
-                                    </a>
-                                    <button onclick="removeFavoriteFromProfile('${p.id}')" style="padding: 8px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; cursor: pointer; transition: all 0.25s ease;">
-                                        <i class="fa-solid fa-trash"></i> Eliminar
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-
-            } catch(e) {
-                console.error("Error al cargar favoritos:", e);
-            }
-        }
-
-        async function removeFavoriteFromProfile(productId) {
-            if (!currentUser || !currentUser.id) return;
-            const userKey = `imperial_favs_${currentUser.id}`;
-            let favs = [];
-            try { favs = JSON.parse(localStorage.getItem(userKey)) || []; } catch(e) {}
-            favs = favs.filter(id => String(id) !== String(productId));
-            localStorage.setItem(userKey, JSON.stringify(favs));
-            if (currentUser.user_metadata) {
-                currentUser.user_metadata.favoritos = favs;
-            }
-
-            if (supabaseClient && supabaseClient.auth) {
-                try {
-                    await supabaseClient.auth.updateUser({ data: { favoritos: favs } });
-                } catch(e) {}
-            }
-            if (typeof updateFavoritesBadge === 'function') {
-                updateFavoritesBadge();
-            }
-            await loadUserFavorites();
-        }
-
         function switchProfileTab(tab) {
             document.querySelectorAll('.profile-menu-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
@@ -1572,10 +1408,6 @@
                 document.getElementById('tabMenuPedidos').classList.add('active');
                 document.getElementById('tabContentPedidos').classList.add('active');
                 loadUserOrders();
-            } else if (tab === 'favoritos') {
-                document.getElementById('tabMenuFavoritos').classList.add('active');
-                document.getElementById('tabContentFavoritos').classList.add('active');
-                loadUserFavorites();
             }
         }
 
