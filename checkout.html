@@ -1102,6 +1102,11 @@
                         }
                     } catch (e) { }
 
+                    const subtotalItems = cartItems.reduce((acc, item) => {
+                        const priceNum = Number(item.precioUnitario || item.precioVenta || item.precio || 0);
+                        return acc + (priceNum * (Number(item.cantidad) || 1));
+                    }, 0);
+
                     const pedidosWebPayload = {
                         cliente_nombre: nombre,
                         email: userEmailStr || null,
@@ -1110,8 +1115,12 @@
                         direccion_envio: `${direccion}, ${ciudad}, C.P. ${cp}${referencias ? ' (Ref: ' + referencias + ')' : ''}`,
                         cp: cp,
                         paqueteria: selectedShippingName || 'Estafeta Express',
+                        metodo_envio: selectedShippingName || 'Estafeta Express',
+                        monto_envio: Number(selectedShippingCost) || 0,
+                        subtotal_articulos: Number(subtotalItems) || 0,
                         detalles_pedido: formattedCartItems,
                         total: grandTotal,
+                        metodo_pago: (selectedPaymentType === 'mercadopago') ? 'Mercado Pago' : 'WhatsApp / Por Acordar',
                         estado: (selectedPaymentType === 'mercadopago') ? 'pendiente_pago' : 'pendiente',
                         comercio_id: 111
                     };
