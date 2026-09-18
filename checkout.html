@@ -1157,12 +1157,15 @@
                 }
 
                 try {
-                    const mpItems = cartItems.map(item => ({
-                        title: `${item.nombre}${item.talla ? ' - Talla: ' + item.talla : ''}`,
-                        quantity: Number(item.cantidad) || 1,
-                        unit_price: Number(item.precioUnitario) || 0,
-                        currency_id: 'MXN'
-                    }));
+                    const mpItems = cartItems.map(item => {
+                        const priceNum = Number(item.precioUnitario || item.precioVenta || item.precio || 0);
+                        return {
+                            title: `${item.nombre}${item.talla ? ' - Talla: ' + item.talla : ''}`,
+                            quantity: Number(item.cantidad) || 1,
+                            unit_price: priceNum,
+                            currency_id: 'MXN'
+                        };
+                    });
 
                     if (selectedShippingCost > 0) {
                         mpItems.push({
@@ -1193,16 +1196,32 @@
                         statement_descriptor: "IMPERIAL DESIGN"
                     };
 
-                    const mpUrl = `https://api.mercadopago.com/checkout/preferences?access_token=${encodeURIComponent(MP_ACCESS_TOKEN)}`;
-                    const resDirect = await fetch(mpUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(mpBody)
-                    });
+                    let data = null;
+                    try {
+                        const resApi = await fetch('/api/create-preference', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...mpBody, accessToken: MP_ACCESS_TOKEN })
+                        });
+                        if (resApi.ok) {
+                            data = await resApi.json();
+                        }
+                    } catch(e) {
+                        console.log("Servidor API interno no disponible:", e);
+                    }
 
-                    const data = await resDirect.json();
+                    if (!data || (!data.init_point && !data.sandbox_init_point)) {
+                        const mpUrl = `https://api.mercadopago.com/checkout/preferences?access_token=${encodeURIComponent(MP_ACCESS_TOKEN)}`;
+                        const resDirect = await fetch(mpUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(mpBody)
+                        });
+                        data = await resDirect.json();
+                    }
+
                     const redirectUrl = data ? (data.init_point || data.sandbox_init_point) : null;
 
                     if (redirectUrl) {
@@ -1211,7 +1230,7 @@
                         return;
                     } else {
                         console.error("Error Mercado Pago API:", data);
-                        let errMsg = data?.message || data?.error || (data?.cause ? data.cause.map(c => c.description).join(', ') : "Error al conectar con Mercado Pago.");
+                        let errMsg = data?.message || data?.error || (data?.cause ? data.cause.map(c => c.description).join(', ') : "No se pudo generar la preferencia de pago.");
                         alert(`⚠️ Mercado Pago: ${errMsg}`);
                         if (finalBtn) {
                             finalBtn.disabled = false;
@@ -1222,7 +1241,7 @@
                     }
                 } catch (err) {
                     console.error("Error al procesar Mercado Pago:", err);
-                    alert("Ocurrió un error al procesar el pago con Mercado Pago.");
+                    alert(`⚠️ Error Mercado Pago: ${err.message || err}`);
                     if (finalBtn) {
                         finalBtn.disabled = false;
                         finalBtn.style.opacity = '1';
