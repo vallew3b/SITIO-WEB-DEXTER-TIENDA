@@ -1083,7 +1083,7 @@
                     }
                 } catch (e) { }
 
-                // Registra pedido en tabla pedidos_web (Columnas compatibles con la tabla real y POS)
+                let createdOrderId = null;
                 try {
                     const formattedCartItems = cartItems.map(item => {
                         const priceNum = Number(item.precioUnitario || item.precioVenta || item.precio || 0);
@@ -1130,9 +1130,11 @@
                     };
 
                     // Insertar en tabla pedidos_web (leído por el Punto de Venta DEXTER / admimperial.lat)
-                    const { error: errWeb } = await supabaseClient.from('pedidos_web').insert([pedidosWebPayload]);
+                    const { data: insData, error: errWeb } = await supabaseClient.from('pedidos_web').insert([pedidosWebPayload]).select('id');
                     if (errWeb) {
                         console.error("Error al insertar en pedidos_web:", errWeb);
+                    } else if (insData && insData.length > 0) {
+                        createdOrderId = insData[0].id;
                     }
 
                     // Insertar en tabla dedicada pedidos_clientes_web por respaldo
@@ -1147,6 +1149,8 @@
                     console.error("Error al registrar pedido:", e);
                 }
             }
+
+            const orderIdStr = createdOrderId ? `#PED-${createdOrderId}` : 'Nuevo';
 
             if (selectedPaymentType === 'mercadopago') {
                 const finalBtn = document.getElementById('btnFinalizeOrder');
@@ -1182,15 +1186,16 @@
 
                     const mpBody = {
                         items: mpItems,
+                        external_reference: createdOrderId ? String(createdOrderId) : undefined,
                         payer: {
                             name: nombre,
                             phone: { number: tel },
                             address: { street_name: direccion, zip_code: cp }
                         },
                         back_urls: {
-                            success: `${baseUrl}perfil.html?order=mp_success`,
+                            success: `${baseUrl}perfil.html?order=mp_success${createdOrderId ? '&order_id=' + createdOrderId : ''}`,
                             failure: `${baseUrl}checkout.html?order=mp_failure`,
-                            pending: `${baseUrl}perfil.html?order=mp_pending`
+                            pending: `${baseUrl}perfil.html?order=mp_pending${createdOrderId ? '&order_id=' + createdOrderId : ''}`
                         },
                         auto_return: "approved",
                         statement_descriptor: "IMPERIAL DESIGN"
@@ -1243,6 +1248,7 @@
             const message =
                 `*NUEVO PEDIDO CON ENVÍO - IMPERIAL DESIGN* 🛍️
 ----------------------------------
+🆔 *FOLIO DE PEDIDO:* *${orderIdStr}*
 👤 *Cliente:* ${nombre}
 📱 *Teléfono:* ${tel}
 
@@ -1261,7 +1267,7 @@ ${itemsText}
 🚚 *Envío (${selectedShippingName}):* $${selectedShippingCost.toFixed(2)}
 🔥 *TOTAL A PAGAR:* *$${grandTotal.toFixed(2)}*
 
-_Por favor confírmame disponibilidad para realizar el pago de mi pedido._`;
+_Por favor confírmame disponibilidad para realizar el pago de mi pedido. Mi Folio es ${orderIdStr}._`;
 
             const waLink = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
 

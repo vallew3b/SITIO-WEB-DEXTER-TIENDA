@@ -764,44 +764,81 @@
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             }
 
-            // Revisar si viene parámetro en URL (?tab=pedidos o ?tab=datos o ?order=mp_success)
+            // Revisar si viene parámetro en URL (?tab=pedidos o ?tab=datos o ?order=mp_success&order_id=105)
             const urlParams = new URLSearchParams(window.location.search);
             const targetTab = urlParams.get('tab');
             const orderStatus = urlParams.get('order');
+            const urlOrderId = urlParams.get('order_id') || urlParams.get('external_reference') || '';
 
             if (orderStatus === 'mp_success') {
-                switchProfileTab('pedidos');
                 const alertBox = document.getElementById('profileAlert');
                 if (alertBox) {
-                    alertBox.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size: 20px; color: #34d399; margin-right: 8px;"></i> <strong>¡Pago Exitoso!</strong> Gracias por tu compra. Tu pago por Mercado Pago ha sido procesado con éxito y tu pedido está confirmado.`;
+                    const folioTag = urlOrderId ? `#PED-${urlOrderId}` : 'Confirmado';
+                    alertBox.innerHTML = `
+                        <div style="padding: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fa-solid fa-circle-check" style="font-size: 26px; color: #34d399;"></i>
+                                <span style="font-size: 18px; font-weight: 800; color: #ffffff;">¡Pago Aprobado y Pedido Confirmado!</span>
+                            </div>
+                            <p style="font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">
+                                Tu pago por Mercado Pago fue procesado con éxito. Tu Folio de Pedido es: <strong style="color: #c9a265; font-size: 17px;">${folioTag}</strong>
+                            </p>
+                            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 14px;">
+                                💡 <strong>Guarda tu Folio (${folioTag}):</strong> Con este número podrás consultar el estatus de tu envío en cualquier momento sin necesidad de crear cuenta.
+                            </p>
+                            ${urlOrderId ? `
+                                <button onclick="openTrackOrderModal('${urlOrderId}')" class="track-search-btn" style="background: linear-gradient(135deg, #c9a265 0%, #a37f44 100%); color: #000; padding: 10px 18px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-truck-fast"></i> Ver Estatus de mi Pedido ${folioTag}
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
                     alertBox.className = 'auth-msg success';
                     alertBox.style.display = 'block';
                 }
-                window.history.replaceState({}, document.title, window.location.pathname + '?tab=pedidos');
             } else if (orderStatus === 'mp_pending') {
-                switchProfileTab('pedidos');
                 const alertBox = document.getElementById('profileAlert');
                 if (alertBox) {
-                    alertBox.innerHTML = `<i class="fa-solid fa-clock" style="font-size: 20px; color: #fbbf24; margin-right: 8px;"></i> <strong>Pago Pendiente:</strong> Tu pago está en proceso de acreditación por Mercado Pago (OXXO o SPEI). Tu pedido se actualizará en cuanto se acredite.`;
+                    const folioTag = urlOrderId ? `#PED-${urlOrderId}` : 'En proceso';
+                    alertBox.innerHTML = `
+                        <div style="padding: 6px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <i class="fa-solid fa-clock" style="font-size: 24px; color: #fbbf24;"></i>
+                                <span style="font-size: 17px; font-weight: 800; color: #ffffff;">Pago Pendiente de Acreditación</span>
+                            </div>
+                            <p style="font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 10px;">
+                                Tu pago se está procesando (OXXO/SPEI). Tu Folio de Pedido es: <strong style="color: #c9a265;">${folioTag}</strong>
+                            </p>
+                            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">
+                                En cuanto Mercado Pago confirme la recepción del dinero, tu pedido pasará a preparación automáticamente.
+                            </p>
+                            ${urlOrderId ? `
+                                <button onclick="openTrackOrderModal('${urlOrderId}')" class="track-search-btn" style="background: #c9a265; color: #000; padding: 8px 16px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-truck-fast"></i> Consultar Pedido ${folioTag}
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
                     alertBox.className = 'auth-msg success';
                     alertBox.style.display = 'block';
                 }
-                window.history.replaceState({}, document.title, window.location.pathname + '?tab=pedidos');
             } else if (targetTab) {
                 switchProfileTab(targetTab);
             }
 
-            await checkUserSession();
+            await checkUserSession(orderStatus);
         });
 
-        async function checkUserSession() {
+        async function checkUserSession(orderStatus = null) {
             if (!supabaseClient) {
-                window.location.href = 'login.html';
+                if (!orderStatus) window.location.href = 'login.html';
                 return;
             }
 
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) {
+                // Si el usuario no tiene cuenta iniciada pero viene de completar un pago (order=mp_success), permitimos que vea la pantalla de confirmación sin mandarlo a login
+                if (orderStatus) return;
                 window.location.href = 'login.html';
                 return;
             }

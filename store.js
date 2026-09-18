@@ -1360,16 +1360,16 @@ function ensureTrackModalDOM() {
                 <div class="track-modal-header">
                     <h3 class="track-modal-title">
                         <i class="fa-solid fa-truck-fast" style="color: #c9a265;"></i>
-                        Rastrear Mi Pedido (Sin Cuenta)
+                        Rastrear Pedido por ID o Guía
                     </h3>
                     <button class="track-modal-close" onclick="closeTrackOrderModal()">&times;</button>
                 </div>
                 <div class="track-modal-body">
                     <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px; line-height: 1.5;">
-                        Ingresa tu <strong>Número de Teléfono (10 dígitos)</strong> o tu <strong>Folio de Pedido</strong> (ej. 105) para consultar el estatus en tiempo real.
+                        Ingresa tu <strong>ID / Folio de Pedido</strong> (ej. 105) o tu <strong>Número de Guía de Paquetería</strong> para consultar el estatus.
                     </p>
                     <div class="track-search-box">
-                        <input type="text" id="trackSearchInput" class="track-search-input" placeholder="Ej. 7341234567 o #PED-105" onkeyup="if(event.key === 'Enter') searchGuestOrder()">
+                        <input type="text" id="trackSearchInput" class="track-search-input" placeholder="Ej. 105 ó #PED-105 ó número de guía" onkeyup="if(event.key === 'Enter') searchGuestOrder()">
                         <button class="track-search-btn" id="trackSearchBtn" onclick="searchGuestOrder()">
                             <i class="fa-solid fa-magnifying-glass"></i> Buscar
                         </button>
@@ -1412,7 +1412,7 @@ window.searchGuestOrder = async () => {
         resultsContainer.innerHTML = `
             <div style="text-align: center; padding: 20px; color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 22px; margin-bottom: 6px;"></i>
-                <p style="margin:0; font-size: 13px;">Por favor ingresa un número de teléfono o folio para buscar.</p>
+                <p style="margin:0; font-size: 13px;">Por favor ingresa tu Folio de Pedido (ej. 105) o tu Número de Guía.</p>
             </div>
         `;
         return;
@@ -1426,7 +1426,7 @@ window.searchGuestOrder = async () => {
     resultsContainer.innerHTML = `
         <div style="text-align: center; padding: 36px; color: rgba(255,255,255,0.6);">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: #c9a265; margin-bottom: 12px;"></i>
-            <p style="margin: 0; font-size: 14px;">Consultando pedidos en el sistema...</p>
+            <p style="margin: 0; font-size: 14px;">Consultando pedido...</p>
         </div>
     `;
 
@@ -1443,12 +1443,12 @@ window.searchGuestOrder = async () => {
 
         let query = supabaseClient.from('pedidos_web').select('*').eq('comercio_id', 111);
 
-        if (digitsOnly.length === 10) {
-            query = query.or(`telefono.eq.${digitsOnly},telefono.ilike.%${digitsOnly}%`);
-        } else if (digitsOnly.length > 0) {
-            query = query.or(`id.eq.${digitsOnly},telefono.ilike.%${digitsOnly}%`);
+        if (digitsOnly.length > 0 && digitsOnly.length < 9) {
+            // Se busca estrictamente por ID de pedido (ej. 105 o #PED-105) o por coincidencia de guía
+            query = query.or(`id.eq.${digitsOnly},numero_guia.ilike.%${rawVal}%,guia.ilike.%${rawVal}%,numero_rastreo.ilike.%${rawVal}%`);
         } else {
-            query = query.ilike('cliente_nombre', `%${rawVal}%`);
+            // Se busca por número de guía de paquetería (ej. ESTAFETA123)
+            query = query.or(`numero_guia.ilike.%${rawVal}%,guia.ilike.%${rawVal}%,numero_rastreo.ilike.%${rawVal}%`);
         }
 
         const { data, error } = await query.order('id', { ascending: false });
@@ -1463,10 +1463,10 @@ window.searchGuestOrder = async () => {
                 <div style="text-align: center; padding: 30px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.15); border-radius: 14px;">
                     <i class="fa-solid fa-magnifying-glass" style="font-size: 36px; color: rgba(255,255,255,0.3); margin-bottom: 12px;"></i>
                     <p style="color: #ffffff; font-weight: 600; font-size: 15px; margin-bottom: 6px;">No se encontró ningún pedido</p>
-                    <p style="color: rgba(255,255,255,0.5); font-size: 13px; max-width: 400px; margin: 0 auto 16px auto;">
-                        Verifica que el número de teléfono o folio sea correcto. Si tienes dudas, contáctanos directamente por WhatsApp.
+                    <p style="color: rgba(255,255,255,0.5); font-size: 13px; max-width: 420px; margin: 0 auto 16px auto;">
+                        Verifica que estés ingresando tu <strong>ID de Pedido exacto</strong> (ej. 105) o tu <strong>Número de Guía</strong>. Si tienes dudas, contáctanos por WhatsApp.
                     </p>
-                    <a href="https://wa.me/527341439779?text=${encodeURIComponent('Hola, necesito ayuda para rastrear mi pedido. Mis datos: ' + rawVal)}" target="_blank" class="track-search-btn" style="display: inline-flex; width: auto; background: #25D366; color: #000; text-decoration: none; margin: 0 auto;">
+                    <a href="https://wa.me/527341439779?text=${encodeURIComponent('Hola, necesito ayuda para encontrar mi pedido. Folio/Búsqueda: ' + rawVal)}" target="_blank" class="track-search-btn" style="display: inline-flex; width: auto; background: #25D366; color: #000; text-decoration: none; margin: 0 auto;">
                         <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i> Ayuda por WhatsApp
                     </a>
                 </div>
