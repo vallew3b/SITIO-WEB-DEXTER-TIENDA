@@ -1444,11 +1444,11 @@ window.searchGuestOrder = async () => {
         let query = supabaseClient.from('pedidos_web').select('*').eq('comercio_id', 111);
 
         if (digitsOnly.length > 0 && digitsOnly.length < 9) {
-            // Se busca estrictamente por ID de pedido (ej. 105 o #PED-105) o por coincidencia de guía
-            query = query.or(`id.eq.${digitsOnly},numero_guia.ilike.%${rawVal}%,guia.ilike.%${rawVal}%,numero_rastreo.ilike.%${rawVal}%`);
+            // Se busca por ID de pedido (ej. 57 o #PED-57) o por número de rastreo
+            query = query.or(`id.eq.${digitsOnly},numero_rastreo.ilike.%${rawVal}%`);
         } else {
-            // Se busca por número de guía de paquetería (ej. ESTAFETA123)
-            query = query.or(`numero_guia.ilike.%${rawVal}%,guia.ilike.%${rawVal}%,numero_rastreo.ilike.%${rawVal}%`);
+            // Se busca por número de guía / rastreo (ej. ESTAFETA123)
+            query = query.or(`numero_rastreo.ilike.%${rawVal}%`);
         }
 
         const { data, error } = await query.order('id', { ascending: false });
