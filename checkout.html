@@ -1196,31 +1196,15 @@
                         statement_descriptor: "IMPERIAL DESIGN"
                     };
 
-                    let data = null;
-                    try {
-                        const resApi = await fetch('/api/create-preference', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ...mpBody, accessToken: MP_ACCESS_TOKEN })
-                        });
-                        if (resApi.ok) {
-                            data = await resApi.json();
-                        }
-                    } catch(e) {
-                        console.log("Servidor API interno no disponible:", e);
-                    }
-
-                    if (!data || (!data.init_point && !data.sandbox_init_point)) {
-                        const mpUrl = `https://api.mercadopago.com/checkout/preferences?access_token=${encodeURIComponent(MP_ACCESS_TOKEN)}`;
-                        const resDirect = await fetch(mpUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(mpBody)
-                        });
-                        data = await resDirect.json();
-                    }
+                    const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + MP_ACCESS_TOKEN
+                        },
+                        body: JSON.stringify(mpBody)
+                    });
+                    const data = await res.json();
 
                     const redirectUrl = data ? (data.init_point || data.sandbox_init_point) : null;
 
