@@ -1386,12 +1386,17 @@ window.openTrackOrderModal = (initialTerm = '') => {
     ensureTrackModalDOM();
     const overlay = document.getElementById('trackOrderModalOverlay');
     const input = document.getElementById('trackSearchInput');
+    const resultsContainer = document.getElementById('trackOrderResults');
     if (overlay) {
         overlay.classList.add('active');
         if (input) {
-            if (initialTerm) input.value = initialTerm;
+            input.value = initialTerm || '';
             input.focus();
-            if (initialTerm) searchGuestOrder();
+            if (initialTerm) {
+                searchGuestOrder();
+            } else if (resultsContainer) {
+                resultsContainer.innerHTML = '';
+            }
         }
     }
 };
@@ -1399,6 +1404,10 @@ window.openTrackOrderModal = (initialTerm = '') => {
 window.closeTrackOrderModal = () => {
     const overlay = document.getElementById('trackOrderModalOverlay');
     if (overlay) overlay.classList.remove('active');
+    const input = document.getElementById('trackSearchInput');
+    const resultsContainer = document.getElementById('trackOrderResults');
+    if (input) input.value = '';
+    if (resultsContainer) resultsContainer.innerHTML = '';
 };
 
 window.searchGuestOrder = async () => {
